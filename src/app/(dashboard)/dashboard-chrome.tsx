@@ -10,7 +10,9 @@ import {
   LogOut,
   Menu,
   Package2,
+  Settings2,
   ShieldCheck,
+  Tags,
   Warehouse,
   X,
 } from "lucide-react";
@@ -30,6 +32,7 @@ type DashboardChromeProps = {
     email: string;
   };
   roles: string[];
+  isAdmin: boolean;
   logoutAction: () => Promise<void>;
 };
 
@@ -40,17 +43,23 @@ const MENU: DashboardMenuItem[] = [
   { href: "/audit", label: "Audit", icon: ShieldCheck },
 ];
 
+const ADMIN_MENU: DashboardMenuItem[] = [
+  { href: "/admin", label: "Panel admin", icon: Settings2 },
+  { href: "/admin/equipment-categories", label: "Kategori peralatan", icon: Tags },
+];
+
 function isActivePath(pathname: string, href: string) {
   return pathname === href || pathname.startsWith(`${href}/`);
 }
 
-export function DashboardChrome({ children, user, roles, logoutAction }: DashboardChromeProps) {
+export function DashboardChrome({ children, user, roles, isAdmin, logoutAction }: DashboardChromeProps) {
   const pathname = usePathname();
   const [mobileOpen, setMobileOpen] = useState(false);
 
   const activeLabel = useMemo(() => {
-    return MENU.find((item) => isActivePath(pathname, item.href))?.label ?? "Dasbor";
-  }, [pathname]);
+    const allMenu = isAdmin ? [...MENU, ...ADMIN_MENU] : MENU;
+    return allMenu.find((item) => isActivePath(pathname, item.href))?.label ?? "Dasbor";
+  }, [pathname, isAdmin]);
 
   return (
     <div className="min-h-screen bg-surface text-text">
@@ -86,6 +95,31 @@ export function DashboardChrome({ children, user, roles, logoutAction }: Dashboa
                 </Link>
               );
             })}
+
+            {isAdmin ? (
+              <div className="px-3 pt-4">
+                <p className="px-3 text-xs font-semibold uppercase tracking-[0.22em] text-muted">Admin</p>
+                <div className="mt-2 space-y-1">
+                  {ADMIN_MENU.map((item) => {
+                    const active = isActivePath(pathname, item.href);
+                    const Icon = item.icon;
+
+                    return (
+                      <Link
+                        key={item.href}
+                        href={item.href}
+                        className={`flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition ${
+                          active ? "bg-accent/10 text-accent" : "text-muted hover:bg-panelAlt hover:text-text"
+                        }`}
+                      >
+                        <Icon className={`h-4 w-4 ${active ? "text-accent" : "text-muted"}`} />
+                        <span>{item.label}</span>
+                      </Link>
+                    );
+                  })}
+                </div>
+              </div>
+            ) : null}
           </nav>
 
           <div className="border-t border-border px-6 py-5">
@@ -149,6 +183,32 @@ export function DashboardChrome({ children, user, roles, logoutAction }: Dashboa
                   </Link>
                 );
               })}
+
+              {isAdmin ? (
+                <div className="px-3 pt-4">
+                  <p className="px-3 text-xs font-semibold uppercase tracking-[0.22em] text-muted">Admin</p>
+                  <div className="mt-2 space-y-1">
+                    {ADMIN_MENU.map((item) => {
+                      const active = isActivePath(pathname, item.href);
+                      const Icon = item.icon;
+
+                      return (
+                        <Link
+                          key={item.href}
+                          href={item.href}
+                          onClick={() => setMobileOpen(false)}
+                          className={`flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition ${
+                            active ? "bg-accent/10 text-accent" : "text-muted hover:bg-panelAlt hover:text-text"
+                          }`}
+                        >
+                          <Icon className={`h-4 w-4 ${active ? "text-accent" : "text-muted"}`} />
+                          <span>{item.label}</span>
+                        </Link>
+                      );
+                    })}
+                  </div>
+                </div>
+              ) : null}
             </nav>
 
             <div className="border-t border-border px-5 py-4">

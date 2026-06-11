@@ -29,6 +29,7 @@ export default async function DashboardLayout({
         email: session.user.email,
       }}
       roles={session.roles.map((role) => role.name)}
+      isAdmin={session.roles.some((role) => role.key === "admin")}
       logoutAction={logoutAction}
     >
       {children}
