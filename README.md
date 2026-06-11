@@ -8,3 +8,4 @@ Start here:
 
 - [Initial Technical Blueprint](docs/technical-blueprint.md)
 - [GitHub + Vercel Requirements](docs/github-vercel-requirements.md)
+- [Roadmap Eksekusi Codex](docs/execution-roadmap.md)

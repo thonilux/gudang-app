@@ -117,6 +117,7 @@ Notes:
 - Keep business rules in feature modules or server services, not inside page components.
 - Use Zod for request and form validation.
 - Use Drizzle migrations for database changes.
+- All user-facing interface text must use Bahasa Indonesia.
 
 ### Data and reliability
 
@@ -158,4 +159,3 @@ A feature is done when:
 - It has no unresolved environment gaps.
 - It stores persistent data in PostgreSQL or object storage, not local disk.
 - It has enough documentation for another engineer to continue the work.
-
