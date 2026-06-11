@@ -428,6 +428,191 @@ async function main() {
       ],
     );
 
+    const warehouseLocations = [
+      { code: "WH-01", name: "Gudang Utama", description: "Lokasi utama persediaan", parent: null, sortOrder: 10 },
+      { code: "WH-01-A", name: "Rak A", description: "Rak barang audio", parent: "WH-01", sortOrder: 20 },
+      { code: "WH-01-B", name: "Rak B", description: "Rak barang umum", parent: "WH-01", sortOrder: 30 },
+    ];
+
+    for (const location of warehouseLocations) {
+      const parentRow =
+        location.parent === null
+          ? null
+          : await client.query("select id from warehouse_locations where code = $1 limit 1", [location.parent]);
+      const parentId = parentRow?.rows?.[0]?.id ?? null;
+
+      await client.query(
+        `
+        insert into warehouse_locations (code, name, description, parent_location_id, sort_order)
+        values ($1, $2, $3, $4, $5)
+        on conflict (code) do update set
+          name = excluded.name,
+          description = excluded.description,
+          parent_location_id = excluded.parent_location_id,
+          sort_order = excluded.sort_order,
+          updated_at = now()
+      `,
+        [location.code, location.name, location.description, parentId, location.sortOrder],
+      );
+    }
+
+    const warehouseLocationRows = await client.query(
+      "select id, code from warehouse_locations where code in ('WH-01', 'WH-01-A', 'WH-01-B')",
+    );
+    const warehouseLocationIdByCode = Object.fromEntries(
+      warehouseLocationRows.rows.map((row) => [row.code, row.id]),
+    );
+
+    const stockItems = [
+      {
+        sku: "STK-CBL-001",
+        name: "Kabel XLR 5m",
+        unit: "pcs",
+        category: "Audio",
+        locationCode: "WH-01-A",
+        currentQuantity: 18,
+        minimumQuantity: 10,
+        notes: "Cadangan kabel audio",
+      },
+      {
+        sku: "STK-BAT-001",
+        name: "Baterai NP-F",
+        unit: "pcs",
+        category: "Power",
+        locationCode: "WH-01-B",
+        currentQuantity: 6,
+        minimumQuantity: 8,
+        notes: "Perlu restock",
+      },
+      {
+        sku: "STK-TAPE-001",
+        name: "Gaffer Tape",
+        unit: "roll",
+        category: "Aksesoris",
+        locationCode: "WH-01-B",
+        currentQuantity: 12,
+        minimumQuantity: 6,
+        notes: "Stok aman",
+      },
+    ];
+
+    for (const item of stockItems) {
+      const locationId = warehouseLocationIdByCode[item.locationCode];
+      await client.query(
+        `
+        insert into warehouse_stock_items (
+          sku,
+          name,
+          unit,
+          category,
+          location_id,
+          current_quantity,
+          minimum_quantity,
+          status,
+          notes,
+          metadata,
+          updated_at
+        )
+        values ($1, $2, $3, $4, $5, $6, $7, $8, $9, '{}'::jsonb, now())
+        on conflict (sku) do update set
+          name = excluded.name,
+          unit = excluded.unit,
+          category = excluded.category,
+          location_id = excluded.location_id,
+          current_quantity = excluded.current_quantity,
+          minimum_quantity = excluded.minimum_quantity,
+          status = excluded.status,
+          notes = excluded.notes,
+          updated_at = now()
+      `,
+        [
+          item.sku,
+          item.name,
+          item.unit,
+          item.category,
+          locationId,
+          item.currentQuantity,
+          item.minimumQuantity,
+          item.currentQuantity <= 0
+            ? "habis"
+            : item.currentQuantity <= item.minimumQuantity
+              ? "menipis"
+              : "available",
+          item.notes,
+        ],
+      );
+    }
+
+    const stockRows = await client.query(
+      "select id, sku, location_id, current_quantity, minimum_quantity from warehouse_stock_items where sku in ('STK-CBL-001', 'STK-BAT-001', 'STK-TAPE-001')",
+    );
+    const stockIdBySku = Object.fromEntries(stockRows.rows.map((row) => [row.sku, row.id]));
+
+    for (const stockId of Object.values(stockIdBySku)) {
+      await client.query("delete from warehouse_stock_movements where stock_item_id = $1", [stockId]);
+    }
+    await client.query("delete from warehouse_stock_count_lines where count_id in (select id from warehouse_stock_counts)");
+    await client.query("delete from warehouse_stock_counts");
+
+    await client.query(
+      `
+      insert into warehouse_stock_movements (
+        stock_item_id,
+        movement_type,
+        quantity,
+        from_location_id,
+        to_location_id,
+        note,
+        changed_by_user_id
+      )
+      values
+        ($1, 'in', 10, null, $2, 'Stok awal seed', $3),
+        ($4, 'out', 2, $5, null, 'Keluar untuk persiapan event', $6),
+        ($7, 'transfer', 0, $8, $9, 'Dipindahkan ke rak cadangan', $10)
+    `,
+      [
+        stockIdBySku["STK-CBL-001"],
+        warehouseLocationIdByCode["WH-01-A"],
+        userId,
+        stockIdBySku["STK-BAT-001"],
+        warehouseLocationIdByCode["WH-01-B"],
+        userId,
+        stockIdBySku["STK-TAPE-001"],
+        warehouseLocationIdByCode["WH-01-B"],
+        warehouseLocationIdByCode["WH-01-A"],
+        userId,
+      ],
+    );
+
+    const countRow = await client.query(
+      `
+      insert into warehouse_stock_counts (location_id, counted_by_user_id, status, note, counted_at)
+      values ($1, $2, 'completed', 'Opname seed gudang', now())
+      returning id
+    `,
+      [warehouseLocationIdByCode["WH-01"], userId],
+    );
+    const countId = countRow.rows[0]?.id;
+    if (countId) {
+      const batteryRow = stockRows.rows.find((row) => row.sku === "STK-BAT-001");
+      if (batteryRow) {
+        await client.query(
+          `
+          insert into warehouse_stock_count_lines (
+            count_id,
+            stock_item_id,
+            system_quantity,
+            counted_quantity,
+            difference,
+            note
+          )
+          values ($1, $2, $3, $4, $5, $6)
+        `,
+          [countId, batteryRow.id, batteryRow.current_quantity, 5, 5 - batteryRow.current_quantity, "Hasil hitung fisik seed"],
+        );
+      }
+    }
+
     await client.query("COMMIT");
     console.log(`Seed fase 1 selesai. Akun admin: ${email.toLowerCase()}`);
   } catch (error) {

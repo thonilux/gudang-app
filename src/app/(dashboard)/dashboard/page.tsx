@@ -8,6 +8,7 @@ import {
   getEquipmentStatusLabel,
   getEquipmentStatusTone,
 } from "@/lib/equipment";
+import { getWarehouseCountsSummary, getWarehouseOverview } from "@/lib/warehouse";
 
 export const dynamic = "force-dynamic";
 
@@ -18,13 +19,15 @@ export default async function DashboardPage() {
   }
 
   const db = getDb();
-  const [recentLogs, equipmentStats, equipmentItems] = await Promise.all([
+  const [recentLogs, equipmentStats, equipmentItems, warehouseOverview, warehouseSummary] = await Promise.all([
     db.query.auditLogs.findMany({
       orderBy: (table, { desc }) => [desc(table.createdAt)],
       limit: 6,
     }),
     getEquipmentDashboardStats(),
     getEquipmentList(),
+    getWarehouseOverview(),
+    getWarehouseCountsSummary(),
   ]);
 
   const cards = [
@@ -59,9 +62,21 @@ export default async function DashboardPage() {
       icon: ShieldAlert,
     },
     {
+      label: "Lokasi gudang",
+      value: warehouseOverview.stats.locationCount.toString(),
+      note: "Struktur lokasi non-serial.",
+      icon: FileClock,
+    },
+    {
+      label: "Restock",
+      value: warehouseSummary.lowStockCount.toString(),
+      note: "Item gudang di bawah ambang minimum.",
+      icon: ShieldAlert,
+    },
+    {
       label: "Mode operasi",
       value: "Siap",
-      note: "Fase 2 berjalan di mode lokal.",
+      note: "Fase 3 berjalan di mode lokal.",
       icon: Activity,
     },
   ];
@@ -201,6 +216,69 @@ export default async function DashboardPage() {
             </tbody>
           </table>
         </div>
+      </section>
+
+      <section className="grid gap-4 lg:grid-cols-[1fr_1fr]">
+        <article className="rounded-2xl border border-slate-200 bg-white p-6 shadow-soft">
+          <h2 className="text-lg font-semibold">Gudang yang aktif</h2>
+          <p className="mt-1 text-sm text-slate-500">
+            Struktur gudang dan stok yang sekarang sudah terdaftar.
+          </p>
+          <div className="mt-4 overflow-hidden rounded-2xl border border-slate-200">
+            <table className="min-w-full divide-y divide-slate-200 text-left text-sm">
+              <thead className="bg-slate-50 text-slate-600">
+                <tr>
+                  <th className="px-4 py-3 font-medium">SKU</th>
+                  <th className="px-4 py-3 font-medium">Stok</th>
+                  <th className="px-4 py-3 font-medium">Jumlah</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-slate-100 bg-white">
+                {warehouseOverview.items.length === 0 ? (
+                  <tr>
+                    <td className="px-4 py-5 text-slate-500" colSpan={3}>
+                      Belum ada stok gudang.
+                    </td>
+                  </tr>
+                ) : (
+                  warehouseOverview.items.slice(0, 5).map((item) => (
+                    <tr key={item.id}>
+                      <td className="px-4 py-3 font-medium text-slate-900">{item.sku}</td>
+                      <td className="px-4 py-3 text-slate-700">{item.name}</td>
+                      <td className="px-4 py-3 text-slate-600">
+                        {item.currentQuantity} {item.unit}
+                      </td>
+                    </tr>
+                  ))
+                )}
+              </tbody>
+            </table>
+          </div>
+        </article>
+
+        <article className="rounded-2xl border border-slate-200 bg-white p-6 shadow-soft">
+          <h2 className="text-lg font-semibold">Mutasi gudang terbaru</h2>
+          <p className="mt-1 text-sm text-slate-500">
+            Ringkasan pergerakan stok non-serial yang baru masuk ke log.
+          </p>
+          <div className="mt-4 space-y-4">
+            {warehouseOverview.movements.length === 0 ? (
+              <p className="text-sm text-slate-500">Belum ada mutasi gudang.</p>
+            ) : (
+              warehouseOverview.movements.slice(0, 4).map((movement) => (
+                <div key={movement.id} className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
+                  <p className="text-sm font-medium text-slate-900">
+                    {movement.stockItemSku} - {movement.stockItemName}
+                  </p>
+                  <p className="mt-1 text-xs text-slate-500">
+                    {movement.movementType} · {movement.quantity} ·{" "}
+                    {movement.createdAt.toLocaleString("id-ID")}
+                  </p>
+                </div>
+              ))
+            )}
+          </div>
+        </article>
       </section>
     </div>
   );

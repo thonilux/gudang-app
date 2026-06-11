@@ -24,6 +24,7 @@ export default async function DashboardLayout({
   const menu = [
     { href: "/dashboard", label: "Dasbor" },
     { href: "/dashboard/equipment", label: "Peralatan" },
+    { href: "/dashboard/warehouse", label: "Warehouse" },
     { href: "/dashboard/audit", label: "Audit" },
   ];
 
