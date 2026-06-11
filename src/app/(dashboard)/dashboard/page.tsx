@@ -1,7 +1,13 @@
-import { Activity, ShieldCheck, FileClock, Users } from "lucide-react";
+import { Activity, FileClock, ShieldAlert, ShieldCheck, Users } from "lucide-react";
 
 import { getDb } from "@/db";
 import { getCurrentAuthSession } from "@/lib/auth";
+import {
+  getEquipmentDashboardStats,
+  getEquipmentList,
+  getEquipmentStatusLabel,
+  getEquipmentStatusTone,
+} from "@/lib/equipment";
 
 export const dynamic = "force-dynamic";
 
@@ -12,10 +18,14 @@ export default async function DashboardPage() {
   }
 
   const db = getDb();
-  const recentLogs = await db.query.auditLogs.findMany({
-    orderBy: (table, { desc }) => [desc(table.createdAt)],
-    limit: 6,
-  });
+  const [recentLogs, equipmentStats, equipmentItems] = await Promise.all([
+    db.query.auditLogs.findMany({
+      orderBy: (table, { desc }) => [desc(table.createdAt)],
+      limit: 6,
+    }),
+    getEquipmentDashboardStats(),
+    getEquipmentList(),
+  ]);
 
   const cards = [
     {
@@ -37,9 +47,21 @@ export default async function DashboardPage() {
       icon: FileClock,
     },
     {
+      label: "Peralatan terdaftar",
+      value: equipmentStats.total.toString(),
+      note: "Aset inti yang sudah masuk inventaris.",
+      icon: ShieldCheck,
+    },
+    {
+      label: "Perlu perhatian",
+      value: equipmentStats.attention.toString(),
+      note: "Status inspeksi atau perbaikan terbuka.",
+      icon: ShieldAlert,
+    },
+    {
       label: "Mode operasi",
       value: "Siap",
-      note: "Fase 1 berjalan di mode lokal.",
+      note: "Fase 2 berjalan di mode lokal.",
       icon: Activity,
     },
   ];
@@ -131,6 +153,54 @@ export default async function DashboardPage() {
             )}
           </div>
         </article>
+      </section>
+
+      <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-soft">
+        <div className="flex items-center justify-between gap-3">
+          <div>
+            <h2 className="text-lg font-semibold">Peralatan yang perlu dilihat</h2>
+            <p className="mt-1 text-sm text-slate-500">
+              Lima item terbaru untuk cek cepat kondisi inventaris.
+            </p>
+          </div>
+        </div>
+
+        <div className="mt-5 overflow-hidden rounded-2xl border border-slate-200">
+          <table className="min-w-full divide-y divide-slate-200 text-left text-sm">
+            <thead className="bg-slate-50 text-slate-600">
+              <tr>
+                <th className="px-4 py-3 font-medium">Kode</th>
+                <th className="px-4 py-3 font-medium">Nama</th>
+                <th className="px-4 py-3 font-medium">Status</th>
+                <th className="px-4 py-3 font-medium">Lokasi</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-slate-100 bg-white">
+              {equipmentItems.slice(0, 5).length === 0 ? (
+                <tr>
+                  <td className="px-4 py-5 text-slate-500" colSpan={4}>
+                    Belum ada peralatan yang terdaftar.
+                  </td>
+                </tr>
+              ) : (
+                equipmentItems.slice(0, 5).map((item) => (
+                  <tr key={item.id}>
+                    <td className="px-4 py-3 font-medium text-slate-900">{item.code}</td>
+                    <td className="px-4 py-3 text-slate-700">{item.name}</td>
+                    <td className="px-4 py-3">
+                      <span
+                        className={`inline-flex rounded-full border px-3 py-1 text-xs font-medium ${getEquipmentStatusTone(item.status)}`}
+                      >
+                        {getEquipmentStatusLabel(item.status)}
+                      </span>
+                    </td>
+                    <td className="px-4 py-3 text-slate-600">{item.locationLabel ?? "-"}</td>
+                  </tr>
+                ))
+              )}
+            </tbody>
+          </table>
+        </div>
       </section>
     </div>
   );
