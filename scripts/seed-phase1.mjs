@@ -476,13 +476,13 @@ async function main() {
       },
       {
         sku: "STK-BAT-001",
-        name: "Baterai NP-F",
+        name: "Baterai Alkalin",
         unit: "pcs",
         category: "Power",
         locationCode: "WH-01-B",
         currentQuantity: 6,
         minimumQuantity: 8,
-        notes: "Perlu restock",
+        notes: "Contoh bahan habis pakai.",
       },
       {
         sku: "STK-TAPE-001",
@@ -631,12 +631,12 @@ async function main() {
         notes: "Dipakai untuk rig speaker",
       },
       {
-        serialNumber: "CAB-USB-001",
-        name: "Kabel USB-C Data",
-        category: "Cable",
+        serialNumber: "BAT-RCH-001-2026",
+        name: "Baterai Rechargeable",
+        category: "Power",
         locationCode: "WH-01-B",
-        status: "maintenance",
-        notes: "Perlu cek kepala konektor",
+        status: "ready",
+        notes: "Contoh aset unik untuk battery pack isi ulang.",
       },
     ];
 
@@ -675,7 +675,7 @@ async function main() {
     }
 
     const serialRows = await client.query(
-      "select id, serial_number, location_id from warehouse_serial_items where serial_number in ('CBL-001-2026', 'CON-001-2026', 'CAB-USB-001')",
+      "select id, serial_number, location_id from warehouse_serial_items where serial_number in ('CBL-001-2026', 'CON-001-2026', 'BAT-RCH-001-2026')",
     );
     const serialIdByNumber = Object.fromEntries(
       serialRows.rows.map((row) => [row.serial_number, row.id]),
@@ -708,7 +708,7 @@ async function main() {
         warehouseLocationIdByCode["WH-01-B"],
         "Unit awal seed",
         userId,
-        serialIdByNumber["CAB-USB-001"],
+        serialIdByNumber["BAT-RCH-001-2026"],
         warehouseLocationIdByCode["WH-01-B"],
         "Unit awal seed",
         userId,

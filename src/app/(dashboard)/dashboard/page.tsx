@@ -228,7 +228,7 @@ export default async function DashboardPage() {
             <table className="min-w-full divide-y divide-slate-200 text-left text-sm">
               <thead className="bg-slate-50 text-slate-600">
                 <tr>
-                  <th className="px-4 py-3 font-medium">SKU</th>
+                  <th className="px-4 py-3 font-medium">Kode bahan habis pakai</th>
                   <th className="px-4 py-3 font-medium">Stok</th>
                   <th className="px-4 py-3 font-medium">Jumlah</th>
                 </tr>

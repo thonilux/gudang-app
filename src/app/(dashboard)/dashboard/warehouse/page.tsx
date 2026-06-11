@@ -57,7 +57,7 @@ export default async function WarehousePage() {
     {
       label: "Bahan habis pakai",
       value: overview.stats.itemCount.toString(),
-      note: "Barang yang dihitung per jumlah.",
+      note: "Contoh: baterai alkalin, tape, dan part kecil lain.",
       icon: Warehouse,
     },
     {
@@ -67,9 +67,9 @@ export default async function WarehousePage() {
       icon: Scale,
     },
     {
-      label: "Barang per unit",
+      label: "Aset unik",
       value: serialOverview.stats.serialCount.toString(),
-      note: "Item yang punya identitas satu-satu.",
+      note: "Contoh: kabel, konektor, rechargeable battery, unit kecil lain.",
       icon: Repeat,
     },
   ];
@@ -80,8 +80,8 @@ export default async function WarehousePage() {
         <p className="text-sm font-medium uppercase tracking-[0.2em] text-teal-700">Warehouse</p>
         <h1 className="mt-2 text-3xl font-semibold tracking-tight">Operasi gudang</h1>
         <p className="mt-2 max-w-2xl text-sm leading-6 text-slate-600">
-          Fase ini memisahkan dua model yang berbeda: bahan habis pakai yang dihitung per jumlah,
-          dan barang per unit yang dilacak satu per satu.
+          Fase ini memisahkan dua model yang berbeda: aset unik yang dilacak satu per satu, dan
+          bahan habis pakai yang dihitung per jumlah.
         </p>
       </section>
 
@@ -110,7 +110,7 @@ export default async function WarehousePage() {
           <div className="flex items-center justify-between gap-3">
             <div>
               <h2 className="text-lg font-semibold">Lokasi gudang</h2>
-              <p className="mt-1 text-sm text-slate-500">Struktur lokasi yang dipakai untuk stok dan unit barang.</p>
+              <p className="mt-1 text-sm text-slate-500">Struktur lokasi yang dipakai untuk aset unik dan bahan habis pakai.</p>
             </div>
             <Link href="#form-lokasi" className="inline-flex items-center gap-2 text-sm font-medium text-teal-700">
               Tambah lokasi <ArrowRight className="h-4 w-4" />
@@ -161,13 +161,13 @@ export default async function WarehousePage() {
       <section className="grid gap-6 lg:grid-cols-[1fr_1fr]">
         <article className="rounded-2xl border border-slate-200 bg-white p-6 shadow-soft">
           <h2 className="text-lg font-semibold">Bahan habis pakai</h2>
-          <p className="mt-1 text-sm text-slate-500">Barang yang dihitung per jumlah dan punya ambang minimum.</p>
+          <p className="mt-1 text-sm text-slate-500">Barang yang dihitung per jumlah, misalnya baterai alkalin dan part kecil lain.</p>
 
           <div className="mt-5 overflow-hidden rounded-2xl border border-slate-200">
             <table className="min-w-full divide-y divide-slate-200 text-left text-sm">
               <thead className="bg-slate-50 text-slate-600">
                 <tr>
-                  <th className="px-4 py-3 font-medium">SKU</th>
+                  <th className="px-4 py-3 font-medium">Kode</th>
                   <th className="px-4 py-3 font-medium">Item</th>
                   <th className="px-4 py-3 font-medium">Jumlah</th>
                   <th className="px-4 py-3 font-medium">Lokasi</th>
@@ -249,9 +249,9 @@ export default async function WarehousePage() {
         <article className="rounded-2xl border border-slate-200 bg-white p-6 shadow-soft">
           <div className="flex items-center justify-between gap-3">
             <div>
-              <h2 className="text-lg font-semibold">Barang per unit</h2>
+              <h2 className="text-lg font-semibold">Aset unik</h2>
               <p className="mt-1 text-sm text-slate-500">
-                Cocok untuk kabel, konektor, alat kecil, dan item yang punya identitas sendiri.
+                Cocok untuk kabel, konektor, rechargeable battery, alat kecil, dan item yang punya identitas sendiri.
               </p>
             </div>
             <Repeat className="h-5 w-5 text-slate-400" />
@@ -261,7 +261,7 @@ export default async function WarehousePage() {
             <table className="min-w-full divide-y divide-slate-200 text-left text-sm">
               <thead className="bg-slate-50 text-slate-600">
                 <tr>
-                  <th className="px-4 py-3 font-medium">Nomor seri</th>
+                  <th className="px-4 py-3 font-medium">ID aset</th>
                   <th className="px-4 py-3 font-medium">Item</th>
                   <th className="px-4 py-3 font-medium">Status</th>
                   <th className="px-4 py-3 font-medium">Lokasi</th>
@@ -271,7 +271,7 @@ export default async function WarehousePage() {
                 {serialOverview.items.length === 0 ? (
                   <tr>
                     <td className="px-4 py-5 text-slate-500" colSpan={4}>
-                      Belum ada barang per unit.
+                      Belum ada aset unik.
                     </td>
                   </tr>
                 ) : (
@@ -301,7 +301,7 @@ export default async function WarehousePage() {
         </article>
 
         <aside className="rounded-2xl border border-slate-200 bg-white p-6 shadow-soft">
-          <h2 className="text-lg font-semibold">Tambah barang per unit</h2>
+          <h2 className="text-lg font-semibold">Tambah aset unik</h2>
           <p className="mt-1 text-sm text-slate-500">Untuk item yang dilacak satu per satu, bukan dihitung jumlah.</p>
           <div className="mt-5">
             <WarehouseSerialItemForm locations={locationOptions} />
@@ -311,7 +311,7 @@ export default async function WarehousePage() {
 
       <section className="grid gap-6 lg:grid-cols-[0.95fr_1.05fr]">
         <article className="rounded-2xl border border-slate-200 bg-white p-6 shadow-soft">
-          <h2 className="text-lg font-semibold">Pindah lokasi barang per unit</h2>
+          <h2 className="text-lg font-semibold">Pindah lokasi aset unik</h2>
           <p className="mt-1 text-sm text-slate-500">Riwayat pindah disimpan per item, tanpa quantity.</p>
           <div className="mt-5">
             <WarehouseSerialMoveForm serialItemOptions={serialItemOptions} locations={locationOptions} />
@@ -320,12 +320,12 @@ export default async function WarehousePage() {
 
         <article className="rounded-2xl border border-slate-200 bg-white p-6 shadow-soft">
           <div className="flex items-center justify-between gap-3">
-            <h2 className="text-lg font-semibold">Mutasi barang per unit</h2>
+            <h2 className="text-lg font-semibold">Mutasi aset unik</h2>
             <BarChart3 className="h-5 w-5 text-slate-400" />
           </div>
           <div className="mt-4 space-y-4">
             {serialOverview.movements.length === 0 ? (
-              <p className="text-sm text-slate-500">Belum ada mutasi barang per unit.</p>
+              <p className="text-sm text-slate-500">Belum ada mutasi aset unik.</p>
             ) : (
               serialOverview.movements.map((movement) => (
                 <div key={movement.id} className="rounded-2xl border border-slate-200 bg-slate-50 p-4">

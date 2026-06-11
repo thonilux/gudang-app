@@ -87,11 +87,11 @@ export function WarehouseStockItemForm({
       <input type="hidden" name="redirectTo" value="/dashboard/warehouse" />
       <div className="grid gap-4 md:grid-cols-2">
         <label className="block space-y-2">
-          <span className="text-sm font-medium text-slate-700">SKU</span>
+          <span className="text-sm font-medium text-slate-700">Kode bahan habis pakai</span>
           <input name="sku" className="w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm outline-none transition focus:border-teal-600" required />
         </label>
         <label className="block space-y-2">
-          <span className="text-sm font-medium text-slate-700">Nama stok</span>
+          <span className="text-sm font-medium text-slate-700">Nama bahan habis pakai</span>
           <input name="name" className="w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm outline-none transition focus:border-teal-600" required />
         </label>
       </div>
@@ -263,11 +263,11 @@ export function WarehouseSerialItemForm({
       <input type="hidden" name="redirectTo" value="/dashboard/warehouse" />
       <div className="grid gap-4 md:grid-cols-2">
         <label className="block space-y-2">
-          <span className="text-sm font-medium text-slate-700">Nomor seri</span>
+          <span className="text-sm font-medium text-slate-700">ID aset unik</span>
           <input name="serialNumber" className="w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm outline-none transition focus:border-teal-600" required />
         </label>
         <label className="block space-y-2">
-          <span className="text-sm font-medium text-slate-700">Nama item</span>
+          <span className="text-sm font-medium text-slate-700">Nama aset</span>
           <input name="name" className="w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm outline-none transition focus:border-teal-600" required />
         </label>
       </div>
@@ -320,9 +320,9 @@ export function WarehouseSerialMoveForm({
   return (
     <form action={formAction} className="space-y-4">
       <label className="block space-y-2">
-        <span className="text-sm font-medium text-slate-700">Barang per unit</span>
+        <span className="text-sm font-medium text-slate-700">Aset unik</span>
         <select name="serialItemId" className="w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm outline-none transition focus:border-teal-600" required defaultValue="">
-          <option value="">Pilih barang</option>
+          <option value="">Pilih aset</option>
           {serialItemOptions.map((item) => (
             <option key={item.id} value={item.id}>
               {item.label}

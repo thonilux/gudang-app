@@ -43,8 +43,8 @@ const locationSchema = z.object({
 });
 
 const stockItemSchema = z.object({
-  sku: z.string().trim().min(1, "SKU wajib diisi."),
-  name: z.string().trim().min(1, "Nama stok wajib diisi."),
+  sku: z.string().trim().min(1, "Kode bahan habis pakai wajib diisi."),
+  name: z.string().trim().min(1, "Nama bahan habis pakai wajib diisi."),
   unit: z.string().trim().min(1, "Satuan wajib diisi."),
   category: optionalText,
   locationId: optionalUuid,
@@ -69,8 +69,8 @@ const opnameSchema = z.object({
 });
 
 const serialItemSchema = z.object({
-  serialNumber: z.string().trim().min(1, "Nomor seri wajib diisi."),
-  name: z.string().trim().min(1, "Nama item wajib diisi."),
+  serialNumber: z.string().trim().min(1, "ID aset unik wajib diisi."),
+  name: z.string().trim().min(1, "Nama aset wajib diisi."),
   category: optionalText,
   locationId: optionalUuid,
   status: z.enum(["ready", "in_use", "maintenance", "retired"]),
@@ -419,7 +419,7 @@ export async function createWarehouseSerialItemAction(
     action: "warehouse.serial_item.create",
     entityType: "warehouse_serial_item",
     entityId: row.id,
-    summary: `Menambahkan barang per unit ${parsed.data.serialNumber}`,
+    summary: `Menambahkan aset unik ${parsed.data.serialNumber}`,
   });
 
   revalidatePath("/dashboard");
@@ -475,7 +475,7 @@ export async function moveWarehouseSerialItemAction(
     action: "warehouse.serial_item.move",
     entityType: "warehouse_serial_item",
     entityId: item.id,
-    summary: `Memindahkan barang per unit ${item.serialNumber}`,
+    summary: `Memindahkan aset unik ${item.serialNumber}`,
   });
 
   revalidatePath("/dashboard");
