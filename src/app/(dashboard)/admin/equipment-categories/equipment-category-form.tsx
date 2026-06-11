@@ -22,7 +22,7 @@ const emptyValues: CategoryValues = {
   key: "",
   name: "",
   description: "",
-  sortOrder: "0",
+  sortOrder: "10",
 };
 
 export function EquipmentCategoryForm({
@@ -104,16 +104,20 @@ export function EquipmentCategoryForm({
         </label>
 
         <label className="block space-y-2">
-          <span className="text-sm font-medium text-text">Urutan</span>
-          <input
-            name="sortOrder"
-            type="number"
-            min="0"
-            value={values.sortOrder}
-            onChange={(event) => setValues((current) => ({ ...current, sortOrder: event.target.value }))}
-            className="w-full rounded-xl border border-border bg-panel px-4 py-3 text-sm outline-none transition focus:border-accent"
-          />
-        </label>
+        <span className="text-sm font-medium text-text">Urutan tampil</span>
+        <input
+          name="sortOrder"
+          type="number"
+          min="0"
+          value={values.sortOrder}
+          onChange={(event) => setValues((current) => ({ ...current, sortOrder: event.target.value }))}
+          className="w-full rounded-xl border border-border bg-panel px-4 py-3 text-sm outline-none transition focus:border-accent"
+        />
+        <p className="text-xs leading-5 text-muted">
+          Angka kecil tampil lebih atas. Disarankan pakai kelipatan 10 supaya mudah menyisipkan
+          kategori baru di tengah.
+        </p>
+      </label>
       </div>
 
       {state.error ? (
@@ -144,4 +148,3 @@ export function EquipmentCategoryForm({
     </form>
   );
 }
-

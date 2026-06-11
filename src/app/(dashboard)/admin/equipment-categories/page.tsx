@@ -71,6 +71,11 @@ export default async function EquipmentCategoriesAdminPage({ searchParams }: Pag
           Panel ini mengelola kategori spesifik yang dipakai oleh form peralatan. Kamu bisa tambah,
           ubah, dan hapus kategori tanpa menyentuh struktur form inventaris.
         </p>
+        <div className="mt-5 rounded-2xl border border-border bg-panelAlt px-4 py-3 text-sm text-muted">
+          <span className="font-medium text-text">Urutan tampil</span> memakai angka kecil ke
+          atas. Kita sengaja pakai kelipatan 10 supaya nanti gampang menyisipkan kategori baru
+          tanpa merombak semua urutan.
+        </div>
       </section>
 
       <section className="grid gap-4 md:grid-cols-4">
@@ -112,6 +117,7 @@ export default async function EquipmentCategoriesAdminPage({ searchParams }: Pag
                 <tr>
                   <th className="px-4 py-3 font-medium">Kategori</th>
                   <th className="px-4 py-3 font-medium">Key</th>
+                  <th className="px-4 py-3 font-medium">Urut</th>
                   <th className="px-4 py-3 font-medium">Dipakai</th>
                   <th className="px-4 py-3 font-medium">Aksi</th>
                 </tr>
@@ -119,7 +125,7 @@ export default async function EquipmentCategoriesAdminPage({ searchParams }: Pag
               <tbody className="divide-y divide-border bg-panel">
                 {categories.length === 0 ? (
                   <tr>
-                    <td className="px-4 py-5 text-muted" colSpan={4}>
+                    <td className="px-4 py-5 text-muted" colSpan={5}>
                       Belum ada kategori equipment.
                     </td>
                   </tr>
@@ -137,6 +143,11 @@ export default async function EquipmentCategoriesAdminPage({ searchParams }: Pag
                           <code className="rounded-lg border border-border bg-panelAlt px-2 py-1 text-xs">
                             {category.key}
                           </code>
+                        </td>
+                        <td className="px-4 py-3">
+                          <span className="inline-flex items-center rounded-full border border-border bg-panelAlt px-3 py-1 text-xs font-medium text-muted">
+                            {category.sortOrder}
+                          </span>
                         </td>
                         <td className="px-4 py-3">
                           <span className="inline-flex items-center gap-2 rounded-full border border-border bg-panelAlt px-3 py-1 text-xs font-medium text-muted">
