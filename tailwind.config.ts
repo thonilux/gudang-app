@@ -17,7 +17,7 @@ const config: Config = {
         },
       },
       boxShadow: {
-        soft: "0 18px 50px -28px rgb(15 23 42 / 0.35)",
+        soft: "0 0.125rem 0.25rem rgb(0 0 0 / 0.04)",
       },
     },
   },
@@ -25,4 +25,3 @@ const config: Config = {
 };
 
 export default config;
-

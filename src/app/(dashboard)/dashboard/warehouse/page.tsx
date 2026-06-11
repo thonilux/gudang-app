@@ -1,6 +1,5 @@
-import Link from "next/link";
 import { redirect } from "next/navigation";
-import { ArrowRight, BarChart3, MapPinned, Repeat, Scale, Warehouse } from "lucide-react";
+import { BarChart3, MapPinned, Repeat, Scale, Warehouse } from "lucide-react";
 
 import { getCurrentAuthSession } from "@/lib/auth";
 import { hasPermission } from "@/lib/rbac";
@@ -21,6 +20,7 @@ import {
   WarehouseLocationForm,
   WarehouseMovementForm,
   WarehouseOpnameForm,
+  WarehouseModal,
   WarehouseSerialItemForm,
   WarehouseSerialMoveForm,
   WarehouseStockItemForm,
@@ -77,7 +77,7 @@ export default async function WarehousePage() {
   return (
     <div className="space-y-6">
       <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-soft">
-        <p className="text-sm font-medium uppercase tracking-[0.2em] text-teal-700">Warehouse</p>
+        <p className="text-sm font-medium uppercase tracking-[0.2em] text-blue-600">Warehouse</p>
         <h1 className="mt-2 text-3xl font-semibold tracking-tight">Operasi gudang</h1>
         <p className="mt-2 max-w-2xl text-sm leading-6 text-slate-600">
           Fase ini memisahkan dua model yang berbeda: aset unik yang dilacak satu per satu, dan
@@ -95,7 +95,7 @@ export default async function WarehousePage() {
                   <p className="text-sm text-slate-500">{card.label}</p>
                   <p className="mt-2 text-3xl font-semibold tracking-tight">{card.value}</p>
                 </div>
-                <div className="rounded-2xl bg-teal-50 p-3 text-teal-700">
+                <div className="rounded-2xl bg-blue-50 p-3 text-blue-700">
                   <Icon className="h-5 w-5" />
                 </div>
               </div>
@@ -112,9 +112,13 @@ export default async function WarehousePage() {
               <h2 className="text-lg font-semibold">Lokasi gudang</h2>
               <p className="mt-1 text-sm text-slate-500">Struktur lokasi yang dipakai untuk aset unik dan bahan habis pakai.</p>
             </div>
-            <Link href="#form-lokasi" className="inline-flex items-center gap-2 text-sm font-medium text-teal-700">
-              Tambah lokasi <ArrowRight className="h-4 w-4" />
-            </Link>
+            <WarehouseModal
+              title="Tambah lokasi gudang"
+              description="Buat lokasi induk atau sub-lokasi untuk menata aset unik dan bahan habis pakai."
+              triggerLabel="Tambah lokasi"
+            >
+              <WarehouseLocationForm locations={locationOptions} />
+            </WarehouseModal>
           </div>
 
           <div className="mt-5 overflow-hidden rounded-2xl border border-slate-200">
@@ -148,12 +152,18 @@ export default async function WarehousePage() {
         </article>
 
         <aside className="rounded-2xl border border-slate-200 bg-white p-6 shadow-soft">
-          <h2 className="text-lg font-semibold" id="form-lokasi">
-            Tambah lokasi
-          </h2>
-          <p className="mt-1 text-sm text-slate-500">Buat hierarki gudang yang ringan dan mudah dirawat.</p>
+          <h2 className="text-lg font-semibold">Buat lokasi dengan modal</h2>
+          <p className="mt-1 text-sm text-slate-500">
+            Form lokasi dibuka sebagai pop-up agar halaman utama tetap fokus ke daftar lokasi.
+          </p>
           <div className="mt-5">
-            <WarehouseLocationForm locations={locationOptions} />
+            <WarehouseModal
+              title="Tambah lokasi gudang"
+              description="Buat lokasi induk atau sub-lokasi untuk menata aset unik dan bahan habis pakai."
+              triggerLabel="Buka form lokasi"
+            >
+              <WarehouseLocationForm locations={locationOptions} />
+            </WarehouseModal>
           </div>
         </aside>
       </section>
@@ -211,7 +221,13 @@ export default async function WarehousePage() {
           <h2 className="text-lg font-semibold">Tambah bahan habis pakai</h2>
           <p className="mt-1 text-sm text-slate-500">Registrasi stok yang dihitung per jumlah.</p>
           <div className="mt-5">
-            <WarehouseStockItemForm locations={locationOptions} />
+            <WarehouseModal
+              title="Tambah bahan habis pakai"
+              description="Masukkan item quantity-based seperti baterai alkalin, tape, atau part kecil lain."
+              triggerLabel="Buka form stok"
+            >
+              <WarehouseStockItemForm locations={locationOptions} />
+            </WarehouseModal>
           </div>
         </aside>
       </section>
@@ -221,13 +237,19 @@ export default async function WarehousePage() {
           <h2 className="text-lg font-semibold">Mutasi bahan habis pakai</h2>
           <p className="mt-1 text-sm text-slate-500">Catat masuk, keluar, atau pindah lokasi.</p>
           <div className="mt-5">
-            <WarehouseMovementForm
-              stockItemOptions={overview.items.map((item) => ({
-                id: item.id,
-                label: `${item.sku} - ${item.name}`,
-              }))}
-              locations={locationOptions}
-            />
+            <WarehouseModal
+              title="Catat mutasi bahan habis pakai"
+              description="Gunakan untuk mencatat barang masuk, keluar, atau transfer antar lokasi."
+              triggerLabel="Buka form mutasi"
+            >
+              <WarehouseMovementForm
+                stockItemOptions={overview.items.map((item) => ({
+                  id: item.id,
+                  label: `${item.sku} - ${item.name}`,
+                }))}
+                locations={locationOptions}
+              />
+            </WarehouseModal>
           </div>
         </article>
 
@@ -235,12 +257,18 @@ export default async function WarehousePage() {
           <h2 className="text-lg font-semibold">Opname bahan habis pakai</h2>
           <p className="mt-1 text-sm text-slate-500">Perbaiki stok berdasarkan hasil hitung fisik.</p>
           <div className="mt-5">
-            <WarehouseOpnameForm
-              stockItemOptions={overview.items.map((item) => ({
-                id: item.id,
-                label: `${item.sku} - ${item.name}`,
-              }))}
-            />
+            <WarehouseModal
+              title="Opname bahan habis pakai"
+              description="Sesuaikan angka sistem dengan hasil hitung fisik di lokasi gudang."
+              triggerLabel="Buka form opname"
+            >
+              <WarehouseOpnameForm
+                stockItemOptions={overview.items.map((item) => ({
+                  id: item.id,
+                  label: `${item.sku} - ${item.name}`,
+                }))}
+              />
+            </WarehouseModal>
           </div>
         </article>
       </section>
@@ -304,7 +332,13 @@ export default async function WarehousePage() {
           <h2 className="text-lg font-semibold">Tambah aset unik</h2>
           <p className="mt-1 text-sm text-slate-500">Untuk item yang dilacak satu per satu, bukan dihitung jumlah.</p>
           <div className="mt-5">
-            <WarehouseSerialItemForm locations={locationOptions} />
+            <WarehouseModal
+              title="Tambah aset unik"
+              description="Masukkan item ber-ID seperti kabel, konektor, atau rechargeable battery."
+              triggerLabel="Buka form aset"
+            >
+              <WarehouseSerialItemForm locations={locationOptions} />
+            </WarehouseModal>
           </div>
         </aside>
       </section>
@@ -314,7 +348,13 @@ export default async function WarehousePage() {
           <h2 className="text-lg font-semibold">Pindah lokasi aset unik</h2>
           <p className="mt-1 text-sm text-slate-500">Riwayat pindah disimpan per item, tanpa quantity.</p>
           <div className="mt-5">
-            <WarehouseSerialMoveForm serialItemOptions={serialItemOptions} locations={locationOptions} />
+            <WarehouseModal
+              title="Pindah lokasi aset unik"
+              description="Perbarui lokasi untuk kabel, konektor, atau item ber-ID lain tanpa mengubah jumlah."
+              triggerLabel="Buka form pindah"
+            >
+              <WarehouseSerialMoveForm serialItemOptions={serialItemOptions} locations={locationOptions} />
+            </WarehouseModal>
           </div>
         </article>
 
@@ -412,7 +452,7 @@ export default async function WarehousePage() {
         </article>
       </section>
 
-      <section className="rounded-2xl border border-teal-100 bg-teal-50 p-6 text-sm text-teal-900">
+      <section className="rounded-2xl border border-blue-100 bg-blue-50 p-6 text-sm text-blue-900">
         <p className="font-medium">Ringkasan stok</p>
         <p className="mt-2 leading-6">
           Total kuantitas bahan habis pakai: {stockSummary.totalQuantity}. Item di bawah ambang minimum: {stockSummary.lowStockCount}.

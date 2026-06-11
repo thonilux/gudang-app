@@ -68,7 +68,7 @@ export default async function EquipmentDetailPage({
         <div className="flex flex-wrap items-center justify-between gap-4">
           <div>
             <Link
-              href="/dashboard/equipment"
+              href="/equipment"
               className="inline-flex items-center gap-2 text-sm font-medium text-slate-600 transition hover:text-slate-900"
             >
               <ArrowLeft className="h-4 w-4" />
@@ -111,7 +111,7 @@ export default async function EquipmentDetailPage({
         {tabItems.map((item) => (
           <Link
             key={item.key}
-            href={`/dashboard/equipment/${detail.item.id}?tab=${item.key}`}
+            href={`/equipment/${detail.item.id}?tab=${item.key}`}
             className={`rounded-xl border px-4 py-2 text-sm font-medium transition ${
               tab === item.key
                 ? "border-teal-600 bg-teal-600 text-white"
@@ -209,14 +209,14 @@ export default async function EquipmentDetailPage({
               <p className="text-sm font-medium text-teal-900">Aksi cepat</p>
               <div className="mt-3 flex flex-wrap gap-2">
                 <Link
-                  href={`/dashboard/equipment/${detail.item.id}?tab=ubah`}
+                  href={`/equipment/${detail.item.id}?tab=ubah`}
                   className="inline-flex items-center gap-2 rounded-xl bg-white px-3 py-2 text-sm font-medium text-teal-800 transition hover:bg-teal-100"
                 >
                   <PencilLine className="h-4 w-4" />
                   Ubah data
                 </Link>
                 <Link
-                  href={`/dashboard/equipment/${detail.item.id}?tab=status`}
+                  href={`/equipment/${detail.item.id}?tab=status`}
                   className="inline-flex items-center gap-2 rounded-xl bg-white px-3 py-2 text-sm font-medium text-teal-800 transition hover:bg-teal-100"
                 >
                   Ubah status
@@ -276,7 +276,7 @@ export default async function EquipmentDetailPage({
               <EquipmentStatusForm
                 equipmentId={detail.item.id}
                 currentStatus={detail.item.status}
-                redirectTo={`/dashboard/equipment/${detail.item.id}?tab=status`}
+                redirectTo={`/equipment/${detail.item.id}?tab=status`}
               />
             </div>
           </article>
@@ -320,7 +320,7 @@ export default async function EquipmentDetailPage({
                 equipmentId={detail.item.id}
                 currentLocationId={detail.item.locationId}
                 locations={detail.locations}
-                redirectTo={`/dashboard/equipment/${detail.item.id}?tab=lokasi`}
+                redirectTo={`/equipment/${detail.item.id}?tab=lokasi`}
               />
             </div>
           </article>
@@ -360,7 +360,7 @@ export default async function EquipmentDetailPage({
             <div className="mt-5">
               <EquipmentDocumentForm
                 equipmentId={detail.item.id}
-                redirectTo={`/dashboard/equipment/${detail.item.id}?tab=dokumen`}
+                redirectTo={`/equipment/${detail.item.id}?tab=dokumen`}
               />
             </div>
           </article>

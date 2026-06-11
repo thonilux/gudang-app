@@ -77,7 +77,7 @@ export function EquipmentUpsertForm({
         type="hidden"
         name="redirectTo"
         value={
-          initialValues?.id ? `/dashboard/equipment/${initialValues.id}` : "/dashboard/equipment"
+          initialValues?.id ? `/equipment/${initialValues.id}` : "/equipment"
         }
       />
 

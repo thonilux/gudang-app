@@ -106,7 +106,7 @@ function safeReturnPath(path?: string) {
     return path;
   }
 
-  return "/dashboard/equipment";
+  return "/equipment";
 }
 
 export async function createEquipmentAction(
@@ -197,8 +197,8 @@ export async function createEquipmentAction(
   });
 
   revalidatePath("/dashboard");
-  revalidatePath("/dashboard/equipment");
-  redirect(`/dashboard/equipment/${created.id}`);
+  revalidatePath("/equipment");
+  redirect(`/equipment/${created.id}`);
 }
 
 export async function updateEquipmentAction(
@@ -296,9 +296,9 @@ export async function updateEquipmentAction(
   });
 
   revalidatePath("/dashboard");
-  revalidatePath("/dashboard/equipment");
-  revalidatePath(`/dashboard/equipment/${updated.id}`);
-  redirect(safeReturnPath(parsed.data.redirectTo ?? `/dashboard/equipment/${updated.id}`));
+  revalidatePath("/equipment");
+  revalidatePath(`/equipment/${updated.id}`);
+  redirect(safeReturnPath(parsed.data.redirectTo ?? `/equipment/${updated.id}`));
 }
 
 export async function changeEquipmentStatusAction(
@@ -359,9 +359,9 @@ export async function changeEquipmentStatusAction(
   });
 
   revalidatePath("/dashboard");
-  revalidatePath("/dashboard/equipment");
-  revalidatePath(`/dashboard/equipment/${parsed.data.equipmentId}`);
-  redirect(safeReturnPath(parsed.data.redirectTo ?? `/dashboard/equipment/${parsed.data.equipmentId}`));
+  revalidatePath("/equipment");
+  revalidatePath(`/equipment/${parsed.data.equipmentId}`);
+  redirect(safeReturnPath(parsed.data.redirectTo ?? `/equipment/${parsed.data.equipmentId}`));
 
   return {};
 }
@@ -426,9 +426,9 @@ export async function changeEquipmentLocationAction(
   });
 
   revalidatePath("/dashboard");
-  revalidatePath("/dashboard/equipment");
-  revalidatePath(`/dashboard/equipment/${parsed.data.equipmentId}`);
-  redirect(safeReturnPath(parsed.data.redirectTo ?? `/dashboard/equipment/${parsed.data.equipmentId}`));
+  revalidatePath("/equipment");
+  revalidatePath(`/equipment/${parsed.data.equipmentId}`);
+  redirect(safeReturnPath(parsed.data.redirectTo ?? `/equipment/${parsed.data.equipmentId}`));
 
   return {};
 }
@@ -479,16 +479,16 @@ export async function addEquipmentDocumentAction(
   });
 
   revalidatePath("/dashboard");
-  revalidatePath("/dashboard/equipment");
-  revalidatePath(`/dashboard/equipment/${parsed.data.equipmentId}`);
-  redirect(safeReturnPath(parsed.data.redirectTo ?? `/dashboard/equipment/${parsed.data.equipmentId}`));
+  revalidatePath("/equipment");
+  revalidatePath(`/equipment/${parsed.data.equipmentId}`);
+  redirect(safeReturnPath(parsed.data.redirectTo ?? `/equipment/${parsed.data.equipmentId}`));
 }
 
 export async function archiveEquipmentAction(formData: FormData) {
   const session = await requireEquipmentWriteAccess();
   const equipmentId = String(formData.get("equipmentId") ?? "");
   if (!equipmentId) {
-    redirect("/dashboard/equipment");
+    redirect("/equipment");
   }
 
   const db = getDb();
@@ -497,7 +497,7 @@ export async function archiveEquipmentAction(formData: FormData) {
   });
 
   if (!existing) {
-    redirect("/dashboard/equipment");
+    redirect("/equipment");
   }
 
   const now = new Date();
@@ -526,7 +526,7 @@ export async function archiveEquipmentAction(formData: FormData) {
   });
 
   revalidatePath("/dashboard");
-  revalidatePath("/dashboard/equipment");
-  revalidatePath(`/dashboard/equipment/${equipmentId}`);
-  redirect(`/dashboard/equipment/${equipmentId}`);
+  revalidatePath("/equipment");
+  revalidatePath(`/equipment/${equipmentId}`);
+  redirect(`/equipment/${equipmentId}`);
 }

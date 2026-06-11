@@ -113,7 +113,7 @@ function safeReturnPath(path?: string) {
     return path;
   }
 
-  return "/dashboard/warehouse";
+  return "/warehouse";
 }
 
 export async function createWarehouseLocationAction(
@@ -155,7 +155,7 @@ export async function createWarehouseLocationAction(
   });
 
   revalidatePath("/dashboard");
-  revalidatePath("/dashboard/warehouse");
+  revalidatePath("/warehouse");
   redirect(safeReturnPath(formData.get("redirectTo") ? String(formData.get("redirectTo")) : undefined));
 }
 
@@ -206,7 +206,7 @@ export async function createWarehouseStockItemAction(
   });
 
   revalidatePath("/dashboard");
-  revalidatePath("/dashboard/warehouse");
+  revalidatePath("/warehouse");
   redirect(safeReturnPath(formData.get("redirectTo") ? String(formData.get("redirectTo")) : undefined));
 }
 
@@ -291,7 +291,7 @@ export async function recordWarehouseMovementAction(
   });
 
   revalidatePath("/dashboard");
-  revalidatePath("/dashboard/warehouse");
+  revalidatePath("/warehouse");
   return {};
 }
 
@@ -378,7 +378,7 @@ export async function recordWarehouseOpnameAction(
   });
 
   revalidatePath("/dashboard");
-  revalidatePath("/dashboard/warehouse");
+  revalidatePath("/warehouse");
   return {};
 }
 
@@ -423,7 +423,7 @@ export async function createWarehouseSerialItemAction(
   });
 
   revalidatePath("/dashboard");
-  revalidatePath("/dashboard/warehouse");
+  revalidatePath("/warehouse");
   return {};
 }
 
@@ -479,6 +479,6 @@ export async function moveWarehouseSerialItemAction(
   });
 
   revalidatePath("/dashboard");
-  revalidatePath("/dashboard/warehouse");
+  revalidatePath("/warehouse");
   return {};
 }
