@@ -133,3 +133,52 @@ export const warehouseStockCountLines = pgTable(
     stockItemIndex: index("warehouse_stock_count_lines_stock_item_id_idx").on(table.stockItemId),
   }),
 );
+
+export const warehouseSerialItems = pgTable(
+  "warehouse_serial_items",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    serialNumber: text("serial_number").notNull(),
+    name: text("name").notNull(),
+    category: text("category").notNull().default(""),
+    locationId: uuid("location_id").references(() => warehouseLocations.id, {
+      onDelete: "set null",
+    }),
+    status: text("status").notNull().default("ready"),
+    notes: text("notes").notNull().default(""),
+    metadata: jsonb("metadata").notNull().default({}),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+    updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (table) => ({
+    serialNumberUnique: uniqueIndex("warehouse_serial_items_serial_number_unique").on(table.serialNumber),
+    locationIndex: index("warehouse_serial_items_location_id_idx").on(table.locationId),
+    statusIndex: index("warehouse_serial_items_status_idx").on(table.status),
+    createdAtIndex: index("warehouse_serial_items_created_at_idx").on(table.createdAt),
+  }),
+);
+
+export const warehouseSerialItemMovements = pgTable(
+  "warehouse_serial_item_movements",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    serialItemId: uuid("serial_item_id")
+      .notNull()
+      .references(() => warehouseSerialItems.id, { onDelete: "cascade" }),
+    fromLocationId: uuid("from_location_id").references(() => warehouseLocations.id, {
+      onDelete: "set null",
+    }),
+    toLocationId: uuid("to_location_id").references(() => warehouseLocations.id, {
+      onDelete: "set null",
+    }),
+    note: text("note"),
+    changedByUserId: uuid("changed_by_user_id").references(() => users.id, {
+      onDelete: "set null",
+    }),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (table) => ({
+    serialItemIndex: index("warehouse_serial_item_movements_serial_item_id_idx").on(table.serialItemId),
+    createdAtIndex: index("warehouse_serial_item_movements_created_at_idx").on(table.createdAt),
+  }),
+);

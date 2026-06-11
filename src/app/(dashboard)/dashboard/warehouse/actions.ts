@@ -12,6 +12,8 @@ import {
   warehouseStockCountLines,
   warehouseStockItems,
   warehouseStockMovements,
+  warehouseSerialItemMovements,
+  warehouseSerialItems,
 } from "@/db/schema";
 import { getCurrentAuthSession, writeAuditLog } from "@/lib/auth";
 import { hasPermission } from "@/lib/rbac";
@@ -63,6 +65,21 @@ const movementSchema = z.object({
 const opnameSchema = z.object({
   stockItemId: z.string().uuid(),
   countedQuantity: z.coerce.number().int().min(0),
+  note: optionalText,
+});
+
+const serialItemSchema = z.object({
+  serialNumber: z.string().trim().min(1, "Nomor seri wajib diisi."),
+  name: z.string().trim().min(1, "Nama item wajib diisi."),
+  category: optionalText,
+  locationId: optionalUuid,
+  status: z.enum(["ready", "in_use", "maintenance", "retired"]),
+  notes: optionalText,
+});
+
+const serialMovementSchema = z.object({
+  serialItemId: z.string().uuid(),
+  locationId: optionalUuid,
   note: optionalText,
 });
 
@@ -358,6 +375,107 @@ export async function recordWarehouseOpnameAction(
     entityId: item.id,
     summary: `Mencatat opname stok ${item.sku}`,
     metadata: { difference },
+  });
+
+  revalidatePath("/dashboard");
+  revalidatePath("/dashboard/warehouse");
+  return {};
+}
+
+export async function createWarehouseSerialItemAction(
+  _state: WarehouseActionState,
+  formData: FormData,
+): Promise<WarehouseActionState> {
+  const session = await requireWarehouseWriteAccess();
+  const parsed = serialItemSchema.safeParse({
+    serialNumber: formData.get("serialNumber"),
+    name: formData.get("name"),
+    category: formData.get("category"),
+    locationId: formData.get("locationId"),
+    status: formData.get("status"),
+    notes: formData.get("notes"),
+  });
+
+  if (!parsed.success) {
+    return { error: parsed.error.issues[0]?.message ?? "Data item tidak valid." };
+  }
+
+  const db = getDb();
+  const [row] = await db
+    .insert(warehouseSerialItems)
+    .values({
+      serialNumber: parsed.data.serialNumber,
+      name: parsed.data.name,
+      category: parsed.data.category ?? "",
+      locationId: parsed.data.locationId ?? null,
+      status: parsed.data.status,
+      notes: parsed.data.notes ?? "",
+      updatedAt: new Date(),
+    })
+    .returning({ id: warehouseSerialItems.id, serialNumber: warehouseSerialItems.serialNumber });
+
+  await writeAuditLog({
+    userId: session.user.id,
+    action: "warehouse.serial_item.create",
+    entityType: "warehouse_serial_item",
+    entityId: row.id,
+    summary: `Menambahkan barang per unit ${parsed.data.serialNumber}`,
+  });
+
+  revalidatePath("/dashboard");
+  revalidatePath("/dashboard/warehouse");
+  return {};
+}
+
+export async function moveWarehouseSerialItemAction(
+  _state: WarehouseActionState,
+  formData: FormData,
+): Promise<WarehouseActionState> {
+  const session = await requireWarehouseWriteAccess();
+  const parsed = serialMovementSchema.safeParse({
+    serialItemId: formData.get("serialItemId"),
+    locationId: formData.get("locationId"),
+    note: formData.get("note"),
+  });
+
+  if (!parsed.success) {
+    return { error: parsed.error.issues[0]?.message ?? "Data perpindahan tidak valid." };
+  }
+
+  const db = getDb();
+  const item = await db.query.warehouseSerialItems.findFirst({
+    where: eq(warehouseSerialItems.id, parsed.data.serialItemId),
+  });
+
+  if (!item) {
+    return { error: "Barang tidak ditemukan." };
+  }
+
+  const now = new Date();
+  await db
+    .update(warehouseSerialItems)
+    .set({
+      locationId: parsed.data.locationId ?? null,
+      updatedAt: now,
+    })
+    .where(eq(warehouseSerialItems.id, parsed.data.serialItemId));
+
+  if (item.locationId !== parsed.data.locationId) {
+    await db.insert(warehouseSerialItemMovements).values({
+      serialItemId: item.id,
+      fromLocationId: item.locationId,
+      toLocationId: parsed.data.locationId ?? null,
+      note: parsed.data.note ?? "Lokasi diperbarui.",
+      changedByUserId: session.user.id,
+    });
+  }
+
+  await writeAuditLog({
+    userId: session.user.id,
+    action: "warehouse.serial_item.move",
+    entityType: "warehouse_serial_item",
+    entityId: item.id,
+    summary: `Memindahkan barang per unit ${item.serialNumber}`,
   });
 
   revalidatePath("/dashboard");

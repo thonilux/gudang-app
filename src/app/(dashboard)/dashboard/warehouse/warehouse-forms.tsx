@@ -6,6 +6,8 @@ import { Loader2 } from "lucide-react";
 import {
   createWarehouseLocationAction,
   createWarehouseStockItemAction,
+  createWarehouseSerialItemAction,
+  moveWarehouseSerialItemAction,
   recordWarehouseMovementAction,
   recordWarehouseOpnameAction,
   type WarehouseActionState,
@@ -238,6 +240,113 @@ export function WarehouseOpnameForm({
       </label>
       {state.error ? <p className="rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">{state.error}</p> : null}
       <SubmitButton pending={pending} label="Simpan opname" />
+    </form>
+  );
+}
+
+const SERIAL_STATUS_OPTIONS = [
+  { value: "ready", label: "Siap" },
+  { value: "in_use", label: "Dipakai" },
+  { value: "maintenance", label: "Perbaikan" },
+  { value: "retired", label: "Pensiun" },
+] as const;
+
+export function WarehouseSerialItemForm({
+  locations,
+}: {
+  locations: WarehouseLocationOption[];
+}) {
+  const [state, formAction, pending] = useActionState(createWarehouseSerialItemAction, {} as WarehouseActionState);
+
+  return (
+    <form action={formAction} className="space-y-4">
+      <input type="hidden" name="redirectTo" value="/dashboard/warehouse" />
+      <div className="grid gap-4 md:grid-cols-2">
+        <label className="block space-y-2">
+          <span className="text-sm font-medium text-slate-700">Nomor seri</span>
+          <input name="serialNumber" className="w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm outline-none transition focus:border-teal-600" required />
+        </label>
+        <label className="block space-y-2">
+          <span className="text-sm font-medium text-slate-700">Nama item</span>
+          <input name="name" className="w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm outline-none transition focus:border-teal-600" required />
+        </label>
+      </div>
+      <div className="grid gap-4 md:grid-cols-2">
+        <label className="block space-y-2">
+          <span className="text-sm font-medium text-slate-700">Kategori</span>
+          <input name="category" className="w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm outline-none transition focus:border-teal-600" />
+        </label>
+        <label className="block space-y-2">
+          <span className="text-sm font-medium text-slate-700">Status</span>
+          <select name="status" defaultValue="ready" className="w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm outline-none transition focus:border-teal-600">
+            {SERIAL_STATUS_OPTIONS.map((option) => (
+              <option key={option.value} value={option.value}>
+                {option.label}
+              </option>
+            ))}
+          </select>
+        </label>
+      </div>
+      <label className="block space-y-2">
+        <span className="text-sm font-medium text-slate-700">Lokasi</span>
+        <select name="locationId" className="w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm outline-none transition focus:border-teal-600" defaultValue="">
+          <option value="">Tanpa lokasi</option>
+          {locations.map((location) => (
+            <option key={location.id} value={location.id}>
+              {location.label}
+            </option>
+          ))}
+        </select>
+      </label>
+      <label className="block space-y-2">
+        <span className="text-sm font-medium text-slate-700">Catatan</span>
+        <textarea name="notes" rows={3} className="w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm outline-none transition focus:border-teal-600" />
+      </label>
+      {state.error ? <p className="rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">{state.error}</p> : null}
+      <SubmitButton pending={pending} label="Simpan barang" />
+    </form>
+  );
+}
+
+export function WarehouseSerialMoveForm({
+  serialItemOptions,
+  locations,
+}: {
+  serialItemOptions: Array<{ id: string; label: string }>;
+  locations: WarehouseLocationOption[];
+}) {
+  const [state, formAction, pending] = useActionState(moveWarehouseSerialItemAction, {} as WarehouseActionState);
+
+  return (
+    <form action={formAction} className="space-y-4">
+      <label className="block space-y-2">
+        <span className="text-sm font-medium text-slate-700">Barang per unit</span>
+        <select name="serialItemId" className="w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm outline-none transition focus:border-teal-600" required defaultValue="">
+          <option value="">Pilih barang</option>
+          {serialItemOptions.map((item) => (
+            <option key={item.id} value={item.id}>
+              {item.label}
+            </option>
+          ))}
+        </select>
+      </label>
+      <label className="block space-y-2">
+        <span className="text-sm font-medium text-slate-700">Lokasi baru</span>
+        <select name="locationId" className="w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm outline-none transition focus:border-teal-600" defaultValue="">
+          <option value="">Tanpa lokasi</option>
+          {locations.map((location) => (
+            <option key={location.id} value={location.id}>
+              {location.label}
+            </option>
+          ))}
+        </select>
+      </label>
+      <label className="block space-y-2">
+        <span className="text-sm font-medium text-slate-700">Catatan perpindahan</span>
+        <textarea name="note" rows={3} className="w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm outline-none transition focus:border-teal-600" />
+      </label>
+      {state.error ? <p className="rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">{state.error}</p> : null}
+      <SubmitButton pending={pending} label="Simpan perpindahan" />
     </form>
   );
 }

@@ -613,6 +613,108 @@ async function main() {
       }
     }
 
+    const serialItems = [
+      {
+        serialNumber: "CBL-001-2026",
+        name: "Kabel XLR 5m",
+        category: "Audio",
+        locationCode: "WH-01-A",
+        status: "ready",
+        notes: "Unit kabel input utama",
+      },
+      {
+        serialNumber: "CON-001-2026",
+        name: "Konektor SpeakON",
+        category: "Connector",
+        locationCode: "WH-01-B",
+        status: "in_use",
+        notes: "Dipakai untuk rig speaker",
+      },
+      {
+        serialNumber: "CAB-USB-001",
+        name: "Kabel USB-C Data",
+        category: "Cable",
+        locationCode: "WH-01-B",
+        status: "maintenance",
+        notes: "Perlu cek kepala konektor",
+      },
+    ];
+
+    for (const item of serialItems) {
+      const locationId = warehouseLocationIdByCode[item.locationCode];
+      await client.query(
+        `
+        insert into warehouse_serial_items (
+          serial_number,
+          name,
+          category,
+          location_id,
+          status,
+          notes,
+          metadata,
+          updated_at
+        )
+        values ($1, $2, $3, $4, $5, $6, '{}'::jsonb, now())
+        on conflict (serial_number) do update set
+          name = excluded.name,
+          category = excluded.category,
+          location_id = excluded.location_id,
+          status = excluded.status,
+          notes = excluded.notes,
+          updated_at = now()
+      `,
+        [
+          item.serialNumber,
+          item.name,
+          item.category,
+          locationId,
+          item.status,
+          item.notes,
+        ],
+      );
+    }
+
+    const serialRows = await client.query(
+      "select id, serial_number, location_id from warehouse_serial_items where serial_number in ('CBL-001-2026', 'CON-001-2026', 'CAB-USB-001')",
+    );
+    const serialIdByNumber = Object.fromEntries(
+      serialRows.rows.map((row) => [row.serial_number, row.id]),
+    );
+
+    for (const serialId of Object.values(serialIdByNumber)) {
+      await client.query("delete from warehouse_serial_item_movements where serial_item_id = $1", [serialId]);
+    }
+
+    await client.query(
+      `
+      insert into warehouse_serial_item_movements (
+        serial_item_id,
+        from_location_id,
+        to_location_id,
+        note,
+        changed_by_user_id
+      )
+      values
+        ($1, null, $2, $3, $4),
+        ($5, null, $6, $7, $8),
+        ($9, null, $10, $11, $12)
+    `,
+      [
+        serialIdByNumber["CBL-001-2026"],
+        warehouseLocationIdByCode["WH-01-A"],
+        "Unit awal seed",
+        userId,
+        serialIdByNumber["CON-001-2026"],
+        warehouseLocationIdByCode["WH-01-B"],
+        "Unit awal seed",
+        userId,
+        serialIdByNumber["CAB-USB-001"],
+        warehouseLocationIdByCode["WH-01-B"],
+        "Unit awal seed",
+        userId,
+      ],
+    );
+
     await client.query("COMMIT");
     console.log(`Seed fase 1 selesai. Akun admin: ${email.toLowerCase()}`);
   } catch (error) {

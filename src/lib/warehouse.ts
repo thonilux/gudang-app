@@ -8,6 +8,8 @@ import {
   warehouseStockCounts,
   warehouseStockItems,
   warehouseStockMovements,
+  warehouseSerialItemMovements,
+  warehouseSerialItems,
   users,
 } from "@/db/schema";
 
@@ -50,6 +52,28 @@ export type WarehouseCountListItem = {
   countedAt: Date;
   locationLabel: string | null;
   countedByName: string | null;
+};
+
+export type WarehouseSerialItemListItem = {
+  id: string;
+  serialNumber: string;
+  name: string;
+  category: string;
+  status: string;
+  notes: string;
+  locationLabel: string | null;
+  updatedAt: Date;
+};
+
+export type WarehouseSerialMovementListItem = {
+  id: string;
+  note: string | null;
+  createdAt: Date;
+  serialNumber: string;
+  serialName: string;
+  fromLocationLabel: string | null;
+  toLocationLabel: string | null;
+  changedByName: string | null;
 };
 
 function buildLocationLabelMap(rows: Array<{
@@ -223,6 +247,79 @@ export async function getWarehouseOverview() {
   };
 }
 
+export async function getWarehouseSerialOverview() {
+  const db = getDb();
+  const [locations, items, movements] = await Promise.all([
+    db
+      .select({
+        id: warehouseLocations.id,
+        code: warehouseLocations.code,
+        name: warehouseLocations.name,
+        parentLocationId: warehouseLocations.parentLocationId,
+      })
+      .from(warehouseLocations)
+      .orderBy(asc(warehouseLocations.sortOrder), asc(warehouseLocations.code)),
+    db
+      .select({
+        id: warehouseSerialItems.id,
+        serialNumber: warehouseSerialItems.serialNumber,
+        name: warehouseSerialItems.name,
+        category: warehouseSerialItems.category,
+        status: warehouseSerialItems.status,
+        notes: warehouseSerialItems.notes,
+        locationId: warehouseSerialItems.locationId,
+        updatedAt: warehouseSerialItems.updatedAt,
+      })
+      .from(warehouseSerialItems)
+      .orderBy(desc(warehouseSerialItems.updatedAt), desc(warehouseSerialItems.createdAt)),
+    db
+      .select({
+        id: warehouseSerialItemMovements.id,
+        note: warehouseSerialItemMovements.note,
+        createdAt: warehouseSerialItemMovements.createdAt,
+        serialNumber: warehouseSerialItems.serialNumber,
+        serialName: warehouseSerialItems.name,
+        fromLocationId: warehouseSerialItemMovements.fromLocationId,
+        toLocationId: warehouseSerialItemMovements.toLocationId,
+        changedByName: users.name,
+      })
+      .from(warehouseSerialItemMovements)
+      .leftJoin(warehouseSerialItems, eq(warehouseSerialItemMovements.serialItemId, warehouseSerialItems.id))
+      .leftJoin(users, eq(warehouseSerialItemMovements.changedByUserId, users.id))
+      .orderBy(desc(warehouseSerialItemMovements.createdAt))
+      .limit(10),
+  ]);
+
+  const locationLabelMap = buildLocationLabelMap(locations);
+
+  return {
+    stats: {
+      serialCount: items.length,
+      movementCount: movements.length,
+    },
+    items: items.map((row) => ({
+      id: row.id,
+      serialNumber: row.serialNumber,
+      name: row.name,
+      category: row.category,
+      status: row.status,
+      notes: row.notes,
+      locationLabel: row.locationId ? locationLabelMap.getLabel(row.locationId) : null,
+      updatedAt: row.updatedAt,
+    })) satisfies WarehouseSerialItemListItem[],
+    movements: movements.map((row) => ({
+      id: row.id,
+      note: row.note,
+      createdAt: row.createdAt,
+      serialNumber: row.serialNumber ?? "",
+      serialName: row.serialName ?? "",
+      fromLocationLabel: row.fromLocationId ? locationLabelMap.getLabel(row.fromLocationId) : null,
+      toLocationLabel: row.toLocationId ? locationLabelMap.getLabel(row.toLocationId) : null,
+      changedByName: row.changedByName ?? null,
+    })) satisfies WarehouseSerialMovementListItem[],
+  };
+}
+
 export function getWarehouseItemStatusTone(currentQuantity: number, minimumQuantity: number) {
   if (currentQuantity <= 0) {
     return "border-rose-200 bg-rose-50 text-rose-800";
@@ -245,6 +342,53 @@ export function getWarehouseItemStatusLabel(currentQuantity: number, minimumQuan
   }
 
   return "Aman";
+}
+
+export function getWarehouseSerialStatusTone(status: string) {
+  switch (status) {
+    case "ready":
+      return "border-emerald-200 bg-emerald-50 text-emerald-800";
+    case "in_use":
+      return "border-sky-200 bg-sky-50 text-sky-800";
+    case "maintenance":
+      return "border-amber-200 bg-amber-50 text-amber-800";
+    case "retired":
+      return "border-slate-200 bg-slate-100 text-slate-700";
+    default:
+      return "border-slate-200 bg-slate-50 text-slate-700";
+  }
+}
+
+export function getWarehouseSerialStatusLabel(status: string) {
+  switch (status) {
+    case "ready":
+      return "Siap";
+    case "in_use":
+      return "Dipakai";
+    case "maintenance":
+      return "Perbaikan";
+    case "retired":
+      return "Pensiun";
+    default:
+      return status;
+  }
+}
+
+export async function getWarehouseSerialItemOptions() {
+  const db = getDb();
+  const items = await db
+    .select({
+      id: warehouseSerialItems.id,
+      serialNumber: warehouseSerialItems.serialNumber,
+      name: warehouseSerialItems.name,
+    })
+    .from(warehouseSerialItems)
+    .orderBy(asc(warehouseSerialItems.serialNumber));
+
+  return items.map((item) => ({
+    id: item.id,
+    label: `${item.serialNumber} - ${item.name}`,
+  }));
 }
 
 export async function getWarehouseStockItemOptions() {
