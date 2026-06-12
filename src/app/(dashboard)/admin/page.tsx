@@ -28,6 +28,12 @@ export default async function AdminPage() {
       icon: Tags,
     },
     {
+      label: "Template inspeksi",
+      value: "Siap",
+      note: "Checklist per kategori untuk fase inspeksi.",
+      icon: Layers3,
+    },
+    {
       label: "Panel admin",
       value: "Siap",
       note: "Scaffold untuk pengelolaan data khusus admin.",
@@ -97,6 +103,18 @@ export default async function AdminPage() {
                 </p>
               </div>
               <Tags className="h-5 w-5 text-accent" />
+            </Link>
+            <Link
+              href="/admin/inspection-templates"
+              className="flex items-center justify-between rounded-2xl border border-border bg-panelAlt px-4 py-3 transition hover:bg-panel"
+            >
+              <div>
+                <p className="text-sm font-medium text-text">Template inspeksi</p>
+                <p className="mt-1 text-xs text-muted">
+                  Atur checklist inspeksi per kategori equipment.
+                </p>
+              </div>
+              <Layers3 className="h-5 w-5 text-accent" />
             </Link>
           </div>
         </article>

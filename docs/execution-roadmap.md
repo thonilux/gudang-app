@@ -120,8 +120,9 @@ Catatan:
 
 Tujuan:
 
-- readiness harus berbasis inspeksi nyata
+- readiness harus berbasis inspeksi nyata di lapangan
 - checklist berbeda per kategori
+- hasil inspeksi ringan dan cepat, tanpa measurement berat
 
 Fitur:
 
@@ -129,6 +130,12 @@ Fitur:
 - eksekusi inspeksi
 - hasil inspeksi
 - status kelulusan
+
+Catatan:
+
+- inspeksi dipakai untuk pemeriksaan operasional saat equipment keluar atau kembali
+- measurement Smaart tetap dipisah sebagai deep inspection di gudang/workshop
+- jangan gabungkan upload file measurement ke checklist inspeksi
 
 Prioritas prompt:
 
@@ -187,9 +194,10 @@ Prioritas prompt:
 
 Tujuan:
 
-- upload file ASCII
+- upload file ASCII untuk deep inspection di gudang/workshop
 - parse data
 - bandingkan dengan baseline
+- hasil measurement dipakai untuk analisis teknis, bukan checklist lapangan
 
 Fitur:
 
@@ -200,6 +208,12 @@ Fitur:
 - coherence chart
 - baseline comparison
 - summary pass/warning/fail
+
+Catatan:
+
+- measurement tidak menggantikan inspeksi lapangan
+- measurement bisa dipicu setelah inspeksi menemukan gejala masalah
+- satu equipment bisa punya banyak inspeksi dan banyak measurement
 
 Prioritas prompt:
 

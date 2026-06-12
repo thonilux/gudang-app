@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
-import { ArrowLeft, FileText, MapPin, PencilLine, ShieldAlert, ShieldCheck } from "lucide-react";
+import { ArrowLeft, FileText, MapPin, PencilLine, ShieldAlert, ShieldCheck, ClipboardCheck } from "lucide-react";
 
 import { getCurrentAuthSession } from "@/lib/auth";
 import {
@@ -10,11 +10,21 @@ import {
   getEquipmentStatusTone,
 } from "@/lib/equipment";
 import { type EquipmentStatusValue } from "@/lib/equipment-shared";
+import {
+  findInspectionTemplateForEquipment,
+  getEquipmentInspectionHistory,
+  getInspectionResultLabel,
+  getInspectionResultTone,
+  getInspectionStatusLabel,
+  getInspectionStatusTone,
+  getInspectionTemplatesForCategory,
+} from "@/lib/inspection";
 import { hasPermission } from "@/lib/rbac";
 
 import {
   archiveEquipmentAction,
 } from "../actions";
+import { EquipmentInspectionForm } from "../inspection-form";
 import {
   EquipmentDocumentForm,
   EquipmentLocationForm,
@@ -50,7 +60,7 @@ export default async function EquipmentDetailPage({
 
   const tabRaw = resolvedSearchParams.tab;
   const activeTab = typeof tabRaw === "string" ? tabRaw : "ikhtisar";
-  const tab = ["ikhtisar", "ubah", "status", "lokasi", "dokumen"].includes(activeTab)
+  const tab = ["ikhtisar", "ubah", "status", "lokasi", "dokumen", "inspeksi"].includes(activeTab)
     ? activeTab
     : "ikhtisar";
 
@@ -60,7 +70,15 @@ export default async function EquipmentDetailPage({
     { key: "status", label: "Status" },
     { key: "lokasi", label: "Lokasi" },
     { key: "dokumen", label: "Dokumen" },
+    { key: "inspeksi", label: "Inspeksi" },
   ];
+
+  const inspectionTemplates = await getInspectionTemplatesForCategory(detail.item.categoryId);
+  const activeInspectionTemplate = findInspectionTemplateForEquipment(
+    inspectionTemplates,
+    [detail.item.name, detail.item.brand, detail.item.model, detail.item.serialNumber ?? ""].join(" "),
+  );
+  const inspectionHistory = tab === "inspeksi" ? await getEquipmentInspectionHistory(detail.item.id) : [];
 
   return (
     <div className="space-y-6">
@@ -220,6 +238,13 @@ export default async function EquipmentDetailPage({
                   className="inline-flex items-center gap-2 rounded-xl bg-white px-3 py-2 text-sm font-medium text-teal-800 transition hover:bg-teal-100"
                 >
                   Ubah status
+                </Link>
+                <Link
+                  href={`/equipment/${detail.item.id}?tab=inspeksi`}
+                  className="inline-flex items-center gap-2 rounded-xl bg-white px-3 py-2 text-sm font-medium text-teal-800 transition hover:bg-teal-100"
+                >
+                  <ClipboardCheck className="h-4 w-4" />
+                  Inspeksi
                 </Link>
               </div>
             </div>
@@ -386,6 +411,106 @@ export default async function EquipmentDetailPage({
                     <p className="mt-1 text-xs text-slate-500">
                       {doc.note ?? "Tanpa catatan."}
                     </p>
+                  </div>
+                ))
+              )}
+            </div>
+          </article>
+        </section>
+      ) : null}
+
+      {tab === "inspeksi" ? (
+        <section className="grid gap-6 lg:grid-cols-[0.95fr_1.05fr]">
+          <article className="rounded-2xl border border-slate-200 bg-white p-6 shadow-soft">
+            <div className="flex items-start justify-between gap-3">
+              <div>
+                <h2 className="text-lg font-semibold">Inspeksi peralatan</h2>
+                <p className="mt-1 text-sm text-slate-500">
+                  Jalankan checklist sesuai kategori untuk memperbarui status equipment.
+                </p>
+              </div>
+              <ShieldCheck className="h-5 w-5 text-slate-400" />
+            </div>
+
+            <div className="mt-5">
+              {activeInspectionTemplate ? (
+                <EquipmentInspectionForm
+                  equipmentId={detail.item.id}
+                  template={activeInspectionTemplate}
+                  redirectTo={`/equipment/${detail.item.id}?tab=inspeksi`}
+                />
+              ) : (
+                <div className="rounded-2xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-900">
+                  Belum ada template inspeksi aktif untuk kategori ini. Tambahkan template di panel admin
+                  agar tab inspeksi bisa dipakai.
+                </div>
+              )}
+            </div>
+          </article>
+
+          <article className="rounded-2xl border border-slate-200 bg-white p-6 shadow-soft">
+            <div className="flex items-center justify-between gap-3">
+              <h2 className="text-lg font-semibold">Riwayat inspeksi</h2>
+              <ClipboardCheck className="h-5 w-5 text-slate-400" />
+            </div>
+            <div className="mt-4 space-y-4">
+              {inspectionHistory.length === 0 ? (
+                <p className="text-sm text-slate-500">Belum ada inspeksi tercatat.</p>
+              ) : (
+                inspectionHistory.map((inspection) => (
+                  <div key={inspection.id} className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
+                    <div className="flex flex-wrap items-start justify-between gap-3">
+                      <div>
+                        <p className="font-medium text-slate-900">{inspection.templateNameSnapshot}</p>
+                        <p className="mt-1 text-xs text-slate-500">
+                          {inspection.inspectedAt.toLocaleString("id-ID")} oleh{" "}
+                          {inspection.inspectedByName ?? "Sistem"}
+                        </p>
+                      </div>
+                      <span
+                        className={`inline-flex rounded-full border px-3 py-1 text-xs font-medium ${getInspectionStatusTone(
+                          inspection.resultStatus,
+                        )}`}
+                      >
+                        {getInspectionStatusLabel(inspection.resultStatus)}
+                      </span>
+                    </div>
+                    <p className="mt-2 text-sm text-slate-600">{inspection.note ?? "Tanpa catatan."}</p>
+                    <div className="mt-3 flex flex-wrap gap-2 text-xs">
+                      <span className="rounded-full border border-slate-200 bg-white px-3 py-1 text-slate-600">
+                        Total {inspection.summary.total}
+                      </span>
+                      <span className="rounded-full border border-slate-200 bg-white px-3 py-1 text-slate-600">
+                        Lulus {inspection.summary.passed}
+                      </span>
+                      <span className="rounded-full border border-slate-200 bg-white px-3 py-1 text-slate-600">
+                        Gagal {inspection.summary.failed}
+                      </span>
+                    </div>
+                    <div className="mt-4 space-y-2">
+                      {inspection.results.map((result) => (
+                        <div
+                          key={result.id}
+                          className="flex flex-wrap items-center justify-between gap-2 rounded-xl border border-slate-200 bg-white px-3 py-2"
+                        >
+                          <div>
+                            <p className="text-sm font-medium text-slate-900">{result.label}</p>
+                            <p className="text-xs text-slate-500">
+                              {result.required ? "Wajib" : "Opsional"}
+                            </p>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <span
+                              className={`inline-flex rounded-full border px-3 py-1 text-xs font-medium ${getInspectionResultTone(
+                                result.result,
+                              )}`}
+                            >
+                              {getInspectionResultLabel(result.result)}
+                            </span>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
                   </div>
                 ))
               )}

@@ -10,6 +10,9 @@ import {
   equipment,
   equipmentDocuments,
   equipmentLocationLogs,
+  equipmentInspectionResults,
+  equipmentInspections,
+  equipmentInspectionTemplates,
   equipmentStatusLogs,
 } from "@/db/schema";
 import { getCurrentAuthSession, writeAuditLog } from "@/lib/auth";
@@ -77,6 +80,15 @@ const equipmentDocumentSchema = z.object({
   fileName: z.string().trim().min(1, "Nama file wajib diisi."),
   storageUrl: optionalText,
   note: optionalText,
+  redirectTo: z.string().trim().optional(),
+});
+
+const inspectionExecutionSchema = z.object({
+  equipmentId: z.string().uuid(),
+  templateId: z.string().uuid(),
+  note: optionalText,
+  nextInspectionAt: optionalDate,
+  checkCount: z.coerce.number().int().min(0),
   redirectTo: z.string().trim().optional(),
 });
 
@@ -529,4 +541,169 @@ export async function archiveEquipmentAction(formData: FormData) {
   revalidatePath("/equipment");
   revalidatePath(`/equipment/${equipmentId}`);
   redirect(`/equipment/${equipmentId}`);
+}
+
+export async function performEquipmentInspectionAction(
+  _state: EquipmentActionState,
+  formData: FormData,
+): Promise<EquipmentActionState> {
+  const session = await requireEquipmentWriteAccess();
+  const parsed = inspectionExecutionSchema.safeParse({
+    equipmentId: formData.get("equipmentId"),
+    templateId: formData.get("templateId"),
+    note: formData.get("note"),
+    nextInspectionAt: formData.get("nextInspectionAt"),
+    checkCount: formData.get("checkCount"),
+    redirectTo: formData.get("redirectTo"),
+  });
+
+  if (!parsed.success) {
+    return { error: parsed.error.issues[0]?.message ?? "Data inspeksi tidak valid." };
+  }
+
+  const db = getDb();
+  const [equipmentRow, templateRow] = await Promise.all([
+    db.query.equipment.findFirst({
+      where: eq(equipment.id, parsed.data.equipmentId),
+    }),
+    db.query.equipmentInspectionTemplates.findFirst({
+      where: eq(equipmentInspectionTemplates.id, parsed.data.templateId),
+    }),
+  ]);
+
+  if (!equipmentRow) {
+    return { error: "Peralatan tidak ditemukan." };
+  }
+
+  if (!templateRow) {
+    return { error: "Template inspeksi tidak ditemukan." };
+  }
+
+  const checklist = Array.isArray(templateRow.checklist) ? templateRow.checklist : [];
+  if (checklist.length === 0) {
+    return { error: "Template inspeksi belum memiliki checklist." };
+  }
+
+  const checks = checklist.map((item, index) => {
+    const label = String((item as { label?: unknown }).label ?? "").trim();
+    const required = Boolean((item as { required?: unknown }).required);
+    const resultValue = String(formData.get(`result_${index}`) ?? "na");
+    const noteValue = String(formData.get(`note_${index}`) ?? "").trim();
+
+    if (!label) {
+      return null;
+    }
+
+    if (!["pass", "fail", "na"].includes(resultValue)) {
+      return null;
+    }
+
+    return {
+      checklistIndex: index,
+      label,
+      required,
+      result: resultValue,
+      note: noteValue.length > 0 ? noteValue : null,
+    };
+  });
+
+  if (checks.some((item) => item === null)) {
+    return { error: "Hasil inspeksi tidak lengkap." };
+  }
+
+  const normalizedChecks = checks as Array<{
+    checklistIndex: number;
+    label: string;
+    required: boolean;
+    result: "pass" | "fail" | "na";
+    note: string | null;
+  }>;
+
+  const hasRequiredFailure = normalizedChecks.some(
+    (item) => item.required && item.result !== "pass",
+  );
+  const hasAnyFailure = normalizedChecks.some((item) => item.result === "fail");
+  const hasAnySkipped = normalizedChecks.some((item) => item.result === "na");
+
+  const resultStatus = hasRequiredFailure
+    ? "fail"
+    : hasAnyFailure || hasAnySkipped
+      ? "warning"
+      : "pass";
+
+  const nextInspectionAt = parsed.data.nextInspectionAt
+    ? new Date(`${parsed.data.nextInspectionAt}T00:00:00`)
+    : new Date(Date.now() + 1000 * 60 * 60 * 24 * 90);
+
+  const now = new Date();
+  await db.transaction(async (tx) => {
+    const [inspection] = await tx
+      .insert(equipmentInspections)
+      .values({
+        equipmentId: equipmentRow.id,
+        templateId: templateRow.id,
+        templateNameSnapshot: templateRow.name,
+        resultStatus,
+        note: parsed.data.note ?? "",
+        checklistSnapshot: checklist,
+        summary: {
+          total: normalizedChecks.length,
+          passed: normalizedChecks.filter((item) => item.result === "pass").length,
+          failed: normalizedChecks.filter((item) => item.result === "fail").length,
+          na: normalizedChecks.filter((item) => item.result === "na").length,
+        },
+        inspectedByUserId: session.user.id,
+        inspectedAt: now,
+        createdAt: now,
+      })
+      .returning({ id: equipmentInspections.id });
+
+    await tx.insert(equipmentInspectionResults).values(
+      normalizedChecks.map((item) => ({
+        inspectionId: inspection.id,
+        checklistIndex: item.checklistIndex,
+        label: item.label,
+        required: item.required,
+        result: item.result,
+        note: item.note,
+      })),
+    );
+
+    await tx
+      .update(equipment)
+      .set({
+        lastInspectionAt: now,
+        nextInspectionAt,
+        status:
+          resultStatus === "pass" ? "ready" : resultStatus === "warning" ? "inspection_due" : "maintenance",
+        lastStatusChangeAt: now,
+        updatedAt: now,
+      })
+      .where(eq(equipment.id, equipmentRow.id));
+
+    await tx.insert(equipmentStatusLogs).values({
+      equipmentId: equipmentRow.id,
+      status:
+        resultStatus === "pass" ? "ready" : resultStatus === "warning" ? "inspection_due" : "maintenance",
+      note: `Hasil inspeksi: ${resultStatus}`,
+      changedByUserId: session.user.id,
+    });
+  });
+
+  await writeAuditLog({
+    userId: session.user.id,
+    action: "equipment.inspection.create",
+    entityType: "equipment",
+    entityId: equipmentRow.id,
+    summary: `Mencatat inspeksi peralatan ${equipmentRow.code}`,
+    metadata: {
+      templateId: templateRow.id,
+      resultStatus,
+    },
+  });
+
+  revalidatePath("/dashboard");
+  revalidatePath("/equipment");
+  revalidatePath(`/equipment/${equipmentRow.id}`);
+  redirect(safeReturnPath(parsed.data.redirectTo ?? `/equipment/${equipmentRow.id}?tab=inspeksi`));
 }

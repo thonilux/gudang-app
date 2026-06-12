@@ -240,6 +240,22 @@ Main entities:
 
 Templates should be category-based. A speaker, mixer, wireless unit, lighting fixture, and video device should not share one generic checklist.
 
+Operational split:
+
+- Inspection is the fast field checklist used before or after equipment leaves the warehouse.
+- Measurement is the deeper workshop/gudang verification path, especially for Smaart or similar technical analysis.
+- Keep inspection lightweight and decision-oriented.
+- Keep measurement file-heavy and analysis-oriented.
+
+Suggested inspection scope:
+
+- cabinet or body condition
+- visible damage
+- basic function test
+- connectors and cables
+- readiness decision
+- optional notes for follow-up measurement
+
 Inspection result should update equipment readiness only when all required checks pass or an authorized user explicitly overrides with notes.
 
 ### Maintenance / Service
@@ -291,6 +307,12 @@ MVP behavior:
 - Compare current result against baseline.
 - Store engineer notes.
 - Calculate summary values.
+
+Measurement should live alongside inspection, not inside it:
+
+- An inspection can point the user toward a later measurement.
+- A measurement can be recorded after inspection reveals a technical symptom.
+- One equipment item can have many inspections and many measurements over time.
 
 Do not implement venue calibration, room maps, auto-tuning, or advanced acoustic diagnosis in MVP.
 
@@ -553,4 +575,3 @@ Measurement tab:
 - Store raw measurement files even after parsing so engineers can reprocess them later.
 - Keep health score explainable. A user should be able to see why a unit is marked warning or fail.
 - Treat QR scanning as an input method, not a separate business process.
-

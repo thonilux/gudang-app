@@ -47,6 +47,7 @@ const MENU: DashboardMenuItem[] = [
 const ADMIN_MENU: DashboardMenuItem[] = [
   { href: "/admin", label: "Panel admin", icon: Settings2 },
   { href: "/admin/equipment-categories", label: "Kategori peralatan", icon: Tags },
+  { href: "/admin/inspection-templates", label: "Template inspeksi", icon: ShieldCheck },
 ];
 
 function isActivePath(pathname: string, href: string) {
