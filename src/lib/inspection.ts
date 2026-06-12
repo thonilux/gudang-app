@@ -1,13 +1,15 @@
 import "server-only";
 
-import { and, asc, desc, eq, inArray } from "drizzle-orm";
+import { and, asc, desc, eq, inArray, or, sql } from "drizzle-orm";
 
 import { getDb } from "@/db";
 import {
+  equipment,
   equipmentCategories,
   equipmentInspectionResults,
   equipmentInspectionTemplates,
   equipmentInspections,
+  equipmentLocations,
   users,
 } from "@/db/schema";
 
@@ -96,6 +98,47 @@ export type EquipmentInspectionListItem = {
   results: EquipmentInspectionResultListItem[];
 };
 
+export type InspectionDashboardRecentItem = {
+  id: string;
+  equipmentId: string;
+  equipmentCode: string;
+  equipmentName: string;
+  categoryName: string | null;
+  locationLabel: string | null;
+  templateNameSnapshot: string;
+  resultStatus: string;
+  note: string | null;
+  inspectedAt: Date;
+  inspectedByName: string | null;
+  summary: {
+    total: number;
+    passed: number;
+    failed: number;
+    na: number;
+  };
+};
+
+export type InspectionDashboardDueItem = {
+  id: string;
+  code: string;
+  name: string;
+  categoryName: string | null;
+  locationLabel: string | null;
+  status: string;
+  lastInspectionAt: Date | null;
+  nextInspectionAt: Date | null;
+};
+
+export type InspectionDashboardOverview = {
+  recentInspections: InspectionDashboardRecentItem[];
+  dueEquipment: InspectionDashboardDueItem[];
+  totalInspections: number;
+  dueCount: number;
+  activeTemplateCount: number;
+  activeTemplateCategories: number;
+  warningCount: number;
+};
+
 function normalizeChecklist(value: unknown): InspectionTemplateChecklistItem[] {
   if (!Array.isArray(value)) {
     return [];
@@ -135,6 +178,37 @@ function buildInspectionSummary(results: Array<{ result: string }>) {
     },
     { total: 0, passed: 0, failed: 0, na: 0 },
   );
+}
+
+function buildLocationLabelMap(rows: Array<{
+  id: string;
+  code: string;
+  name: string;
+  parentLocationId: string | null;
+}>) {
+  const byId = new Map(rows.map((row) => [row.id, row]));
+
+  const getLabel = (id: string): string => {
+    const row = byId.get(id);
+    if (!row) {
+      return id;
+    }
+
+    const parts = [row.name];
+    let parentId = row.parentLocationId;
+    while (parentId) {
+      const parent = byId.get(parentId);
+      if (!parent) {
+        break;
+      }
+      parts.unshift(parent.name);
+      parentId = parent.parentLocationId;
+    }
+
+    return `${row.code} - ${parts.join(" / ")}`;
+  };
+
+  return { getLabel };
 }
 
 export function getInspectionStatusLabel(status: string) {
@@ -306,4 +380,120 @@ export async function getEquipmentInspectionHistory(equipmentId: string) {
       results,
     } satisfies EquipmentInspectionListItem;
   });
+}
+
+export async function getInspectionDashboardOverview(): Promise<InspectionDashboardOverview> {
+  const db = getDb();
+  const now = new Date();
+
+  const [locationRows, recentInspections, dueEquipment, inspectionCountRows, templateRows] =
+    await Promise.all([
+      db
+        .select({
+          id: equipmentLocations.id,
+          code: equipmentLocations.code,
+          name: equipmentLocations.name,
+          parentLocationId: equipmentLocations.parentLocationId,
+        })
+        .from(equipmentLocations)
+        .orderBy(asc(equipmentLocations.code), asc(equipmentLocations.name)),
+      db
+        .select({
+          id: equipmentInspections.id,
+          equipmentId: equipmentInspections.equipmentId,
+          equipmentCode: equipment.code,
+          equipmentName: equipment.name,
+          categoryName: equipmentCategories.name,
+          locationId: equipment.locationId,
+          templateNameSnapshot: equipmentInspections.templateNameSnapshot,
+          resultStatus: equipmentInspections.resultStatus,
+          note: equipmentInspections.note,
+          inspectedAt: equipmentInspections.inspectedAt,
+          inspectedByName: users.name,
+          summary: equipmentInspections.summary,
+        })
+        .from(equipmentInspections)
+        .leftJoin(equipment, eq(equipmentInspections.equipmentId, equipment.id))
+        .leftJoin(equipmentCategories, eq(equipment.categoryId, equipmentCategories.id))
+        .leftJoin(users, eq(equipmentInspections.inspectedByUserId, users.id))
+        .orderBy(desc(equipmentInspections.inspectedAt))
+        .limit(10),
+      db
+        .select({
+          id: equipment.id,
+          code: equipment.code,
+          name: equipment.name,
+          categoryName: equipmentCategories.name,
+          locationId: equipment.locationId,
+          status: equipment.status,
+          lastInspectionAt: equipment.lastInspectionAt,
+          nextInspectionAt: equipment.nextInspectionAt,
+        })
+        .from(equipment)
+        .leftJoin(equipmentCategories, eq(equipment.categoryId, equipmentCategories.id))
+        .where(
+          or(
+            eq(equipment.status, "inspection_due"),
+            and(sql`${equipment.nextInspectionAt} is not null`, sql`${equipment.nextInspectionAt} <= ${now}`),
+          ),
+        )
+        .orderBy(asc(equipment.nextInspectionAt), asc(equipment.code))
+        .limit(10),
+      db
+        .select({ count: sql<number>`count(*)::int` })
+        .from(equipmentInspections),
+      db
+        .select({
+          id: equipmentInspectionTemplates.id,
+          categoryId: equipmentInspectionTemplates.categoryId,
+          isActive: equipmentInspectionTemplates.isActive,
+        })
+        .from(equipmentInspectionTemplates)
+        .where(eq(equipmentInspectionTemplates.isActive, true)),
+    ]);
+
+  const locationLabelMap = buildLocationLabelMap(locationRows);
+  const recentMapped = recentInspections.map((row) => ({
+    id: row.id,
+    equipmentId: row.equipmentId,
+    equipmentCode: row.equipmentCode ?? "-",
+    equipmentName: row.equipmentName ?? "-",
+    categoryName: row.categoryName ?? null,
+    locationLabel: row.locationId ? locationLabelMap.getLabel(row.locationId) : null,
+    templateNameSnapshot: row.templateNameSnapshot,
+    resultStatus: row.resultStatus,
+    note: row.note,
+    inspectedAt: row.inspectedAt,
+    inspectedByName: row.inspectedByName ?? null,
+    summary:
+      typeof row.summary === "object" && row.summary && !Array.isArray(row.summary)
+        ? {
+            total: Number((row.summary as { total?: number }).total ?? 0),
+            passed: Number((row.summary as { passed?: number }).passed ?? 0),
+            failed: Number((row.summary as { failed?: number }).failed ?? 0),
+            na: Number((row.summary as { na?: number }).na ?? 0),
+          }
+        : { total: 0, passed: 0, failed: 0, na: 0 },
+  }));
+
+  const dueMapped = dueEquipment.map((row) => ({
+    id: row.id,
+    code: row.code,
+    name: row.name,
+    categoryName: row.categoryName ?? null,
+    locationLabel: row.locationId ? locationLabelMap.getLabel(row.locationId) : null,
+    status: row.status,
+    lastInspectionAt: row.lastInspectionAt,
+    nextInspectionAt: row.nextInspectionAt,
+  }));
+
+  return {
+    recentInspections: recentMapped,
+    dueEquipment: dueMapped,
+    totalInspections: inspectionCountRows[0]?.count ?? 0,
+    dueCount: dueMapped.length,
+    activeTemplateCount: templateRows.length,
+    activeTemplateCategories: new Set(templateRows.map((row) => row.categoryId)).size,
+    warningCount: recentMapped.filter((row) => row.resultStatus !== "pass").length,
+  };
 }

@@ -5,6 +5,7 @@ import { usePathname } from "next/navigation";
 import { type ReactNode, useMemo, useState } from "react";
 import {
   Building2,
+  ClipboardCheck,
   type LucideIcon,
   LayoutDashboard,
   LogOut,
@@ -38,6 +39,7 @@ type DashboardChromeProps = {
 
 const MENU: DashboardMenuItem[] = [
   { href: "/dashboard", label: "Dasbor", icon: LayoutDashboard },
+  { href: "/inspections", label: "Inspeksi", icon: ClipboardCheck },
   { href: "/warehouse", label: "Warehouse", icon: Warehouse },
   { href: "/equipment", label: "Peralatan", icon: Package2 },
   { href: "/bhp", label: "BHP", icon: Package2 },
@@ -51,7 +53,13 @@ const ADMIN_MENU: DashboardMenuItem[] = [
 ];
 
 function isActivePath(pathname: string, href: string) {
-  return pathname === href || pathname.startsWith(`${href}/`);
+  const normalized = pathname.startsWith("/dashboard/") ? pathname.replace("/dashboard", "") : pathname;
+  return (
+    normalized === href ||
+    normalized.startsWith(`${href}/`) ||
+    pathname === href ||
+    pathname.startsWith(`${href}/`)
+  );
 }
 
 export function DashboardChrome({ children, user, roles, isAdmin, logoutAction }: DashboardChromeProps) {
