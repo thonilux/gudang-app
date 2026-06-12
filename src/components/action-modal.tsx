@@ -8,11 +8,13 @@ export function ActionModal({
   title,
   description,
   triggerLabel,
+  triggerIcon,
   children,
 }: {
   title: string;
   description: string;
   triggerLabel: string;
+  triggerIcon?: ReactNode;
   children: ReactNode;
 }) {
   const [open, setOpen] = useState(false);
@@ -47,7 +49,7 @@ export function ActionModal({
         title={triggerLabel}
         className="inline-flex h-9 w-9 items-center justify-center rounded-xl border border-border bg-panel text-text transition hover:bg-panelAlt"
       >
-        <PencilLine className="h-4 w-4" />
+        {triggerIcon ?? <PencilLine className="h-4 w-4" />}
       </button>
 
       {open ? (

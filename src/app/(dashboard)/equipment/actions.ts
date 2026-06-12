@@ -85,10 +85,10 @@ const equipmentDocumentSchema = z.object({
 
 const inspectionExecutionSchema = z.object({
   equipmentId: z.string().uuid(),
-  templateId: z.string().uuid(),
+  templateId: optionalUuid,
+  resultStatus: z.enum(["pass", "warning", "fail"]).optional(),
   note: optionalText,
   nextInspectionAt: optionalDate,
-  checkCount: z.coerce.number().int().min(0),
   redirectTo: z.string().trim().optional(),
 });
 
@@ -551,9 +551,9 @@ export async function performEquipmentInspectionAction(
   const parsed = inspectionExecutionSchema.safeParse({
     equipmentId: formData.get("equipmentId"),
     templateId: formData.get("templateId"),
+    resultStatus: formData.get("resultStatus"),
     note: formData.get("note"),
     nextInspectionAt: formData.get("nextInspectionAt"),
-    checkCount: formData.get("checkCount"),
     redirectTo: formData.get("redirectTo"),
   });
 
@@ -562,56 +562,63 @@ export async function performEquipmentInspectionAction(
   }
 
   const db = getDb();
+  const templateId = parsed.data.templateId ?? null;
   const [equipmentRow, templateRow] = await Promise.all([
     db.query.equipment.findFirst({
       where: eq(equipment.id, parsed.data.equipmentId),
     }),
-    db.query.equipmentInspectionTemplates.findFirst({
-      where: eq(equipmentInspectionTemplates.id, parsed.data.templateId),
-    }),
+    templateId
+      ? db.query.equipmentInspectionTemplates.findFirst({
+          where: eq(equipmentInspectionTemplates.id, templateId),
+        })
+      : Promise.resolve(null),
   ]);
 
   if (!equipmentRow) {
     return { error: "Peralatan tidak ditemukan." };
   }
 
-  if (!templateRow) {
+  const useTemplate = Boolean(templateRow);
+  const resultStatus = useTemplate
+    ? null
+    : parsed.data.resultStatus ?? "pass";
+
+  if (templateId && !templateRow) {
     return { error: "Template inspeksi tidak ditemukan." };
   }
 
-  const checklist = Array.isArray(templateRow.checklist) ? templateRow.checklist : [];
-  if (checklist.length === 0) {
-    return { error: "Template inspeksi belum memiliki checklist." };
-  }
+  const checklist = useTemplate && templateRow ? (Array.isArray(templateRow.checklist) ? templateRow.checklist : []) : [];
 
-  const checks = checklist.map((item, index) => {
-    const label = String((item as { label?: unknown }).label ?? "").trim();
-    const required = Boolean((item as { required?: unknown }).required);
-    const resultValue = String(formData.get(`result_${index}`) ?? "na");
-    const noteValue = String(formData.get(`note_${index}`) ?? "").trim();
+  const normalizedChecks = useTemplate
+    ? checklist.map((item, index) => {
+        const label = String((item as { label?: unknown }).label ?? "").trim();
+        const required = Boolean((item as { required?: unknown }).required);
+        const resultValue = String(formData.get(`result_${index}`) ?? "na");
+        const noteValue = String(formData.get(`note_${index}`) ?? "").trim();
 
-    if (!label) {
-      return null;
-    }
+        if (!label) {
+          return null;
+        }
 
-    if (!["pass", "fail", "na"].includes(resultValue)) {
-      return null;
-    }
+        if (!["pass", "fail", "na"].includes(resultValue)) {
+          return null;
+        }
 
-    return {
-      checklistIndex: index,
-      label,
-      required,
-      result: resultValue,
-      note: noteValue.length > 0 ? noteValue : null,
-    };
-  });
+        return {
+          checklistIndex: index,
+          label,
+          required,
+          result: resultValue,
+          note: noteValue.length > 0 ? noteValue : null,
+        };
+      })
+    : [];
 
-  if (checks.some((item) => item === null)) {
+  if (useTemplate && normalizedChecks.some((item) => item === null)) {
     return { error: "Hasil inspeksi tidak lengkap." };
   }
 
-  const normalizedChecks = checks as Array<{
+  const typedChecks = normalizedChecks as Array<{
     checklistIndex: number;
     label: string;
     required: boolean;
@@ -619,17 +626,16 @@ export async function performEquipmentInspectionAction(
     note: string | null;
   }>;
 
-  const hasRequiredFailure = normalizedChecks.some(
-    (item) => item.required && item.result !== "pass",
-  );
-  const hasAnyFailure = normalizedChecks.some((item) => item.result === "fail");
-  const hasAnySkipped = normalizedChecks.some((item) => item.result === "na");
+  const hasRequiredFailure = typedChecks.some((item) => item.required && item.result !== "pass");
+  const hasAnyFailure = typedChecks.some((item) => item.result === "fail");
+  const hasAnySkipped = typedChecks.some((item) => item.result === "na");
 
-  const resultStatus = hasRequiredFailure
-    ? "fail"
-    : hasAnyFailure || hasAnySkipped
-      ? "warning"
-      : "pass";
+  let finalStatus: "pass" | "warning" | "fail";
+  if (useTemplate) {
+    finalStatus = hasRequiredFailure ? "fail" : hasAnyFailure || hasAnySkipped ? "warning" : "pass";
+  } else {
+    finalStatus = resultStatus ?? "pass";
+  }
 
   const nextInspectionAt = parsed.data.nextInspectionAt
     ? new Date(`${parsed.data.nextInspectionAt}T00:00:00`)
@@ -641,16 +647,16 @@ export async function performEquipmentInspectionAction(
       .insert(equipmentInspections)
       .values({
         equipmentId: equipmentRow.id,
-        templateId: templateRow.id,
-        templateNameSnapshot: templateRow.name,
-        resultStatus,
+        templateId: templateRow?.id ?? null,
+        templateNameSnapshot: templateRow?.name ?? "Inspeksi umum",
+        resultStatus: finalStatus,
         note: parsed.data.note ?? "",
         checklistSnapshot: checklist,
         summary: {
-          total: normalizedChecks.length,
-          passed: normalizedChecks.filter((item) => item.result === "pass").length,
-          failed: normalizedChecks.filter((item) => item.result === "fail").length,
-          na: normalizedChecks.filter((item) => item.result === "na").length,
+          total: typedChecks.length,
+          passed: typedChecks.filter((item) => item.result === "pass").length,
+          failed: typedChecks.filter((item) => item.result === "fail").length,
+          na: typedChecks.filter((item) => item.result === "na").length,
         },
         inspectedByUserId: session.user.id,
         inspectedAt: now,
@@ -658,16 +664,18 @@ export async function performEquipmentInspectionAction(
       })
       .returning({ id: equipmentInspections.id });
 
-    await tx.insert(equipmentInspectionResults).values(
-      normalizedChecks.map((item) => ({
-        inspectionId: inspection.id,
-        checklistIndex: item.checklistIndex,
-        label: item.label,
-        required: item.required,
-        result: item.result,
-        note: item.note,
-      })),
-    );
+    if (typedChecks.length > 0) {
+      await tx.insert(equipmentInspectionResults).values(
+        typedChecks.map((item) => ({
+          inspectionId: inspection.id,
+          checklistIndex: item.checklistIndex,
+          label: item.label,
+          required: item.required,
+          result: item.result,
+          note: item.note,
+        })),
+      );
+    }
 
     await tx
       .update(equipment)
@@ -675,7 +683,7 @@ export async function performEquipmentInspectionAction(
         lastInspectionAt: now,
         nextInspectionAt,
         status:
-          resultStatus === "pass" ? "ready" : resultStatus === "warning" ? "inspection_due" : "maintenance",
+          finalStatus === "pass" ? "ready" : finalStatus === "warning" ? "inspection_due" : "maintenance",
         lastStatusChangeAt: now,
         updatedAt: now,
       })
@@ -684,8 +692,8 @@ export async function performEquipmentInspectionAction(
     await tx.insert(equipmentStatusLogs).values({
       equipmentId: equipmentRow.id,
       status:
-        resultStatus === "pass" ? "ready" : resultStatus === "warning" ? "inspection_due" : "maintenance",
-      note: `Hasil inspeksi: ${resultStatus}`,
+        finalStatus === "pass" ? "ready" : finalStatus === "warning" ? "inspection_due" : "maintenance",
+      note: `Hasil inspeksi: ${finalStatus}`,
       changedByUserId: session.user.id,
     });
   });
@@ -697,8 +705,9 @@ export async function performEquipmentInspectionAction(
     entityId: equipmentRow.id,
     summary: `Mencatat inspeksi peralatan ${equipmentRow.code}`,
     metadata: {
-      templateId: templateRow.id,
-      resultStatus,
+      templateId: templateRow?.id ?? null,
+      templateNameSnapshot: templateRow?.name ?? "Inspeksi umum",
+      resultStatus: finalStatus,
     },
   });
 

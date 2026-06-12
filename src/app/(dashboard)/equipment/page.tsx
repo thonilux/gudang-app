@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
-import { ArrowRight, LayoutGrid, MapPin, Search, ShieldAlert, ShieldCheck, Wrench } from "lucide-react";
+import { ArrowRight, ClipboardCheck, Eye, LayoutGrid, MapPin, Search, ShieldAlert, ShieldCheck, Wrench } from "lucide-react";
 
 import { ActionModal } from "@/components/action-modal";
 import { getCurrentAuthSession } from "@/lib/auth";
@@ -203,7 +203,12 @@ export default async function EquipmentPage({
                     <tr key={item.id}>
                       <td className="px-4 py-3 font-medium text-slate-900">{item.code}</td>
                       <td className="px-4 py-3 text-slate-700">
-                        <p className="font-medium text-slate-900">{item.name}</p>
+                        <Link
+                          href={`/equipment/${item.id}?tab=ikhtisar`}
+                          className="font-medium text-slate-900 transition hover:text-teal-700"
+                        >
+                          {item.name}
+                        </Link>
                         <p className="mt-1 text-xs text-slate-500">
                           {buildEquipmentSummaryLine({
                             brand: item.brand,
@@ -227,33 +232,53 @@ export default async function EquipmentPage({
                         </div>
                       </td>
                       <td className="px-4 py-3">
-                        <ActionModal
-                          title="Ubah peralatan"
-                          description="Perbarui data dasar peralatan tanpa keluar dari daftar."
-                          triggerLabel="Ubah peralatan"
-                        >
-                          <EquipmentUpsertForm
-                            mode="edit"
-                            categories={referenceData.categories}
-                            locations={referenceData.locations}
-                            initialValues={{
-                              id: item.id,
-                              code: item.code,
-                              name: item.name,
-                              categoryId: item.categoryId,
-                              locationId: item.locationId ?? "",
-                              brand: item.brand,
-                              model: item.model,
-                              serialNumber: item.serialNumber ?? "",
-                              status: item.status as EquipmentStatusValue,
-                              conditionNote: item.conditionNote,
-                              specificationNote: item.specificationNote,
-                              notes: item.notes,
-                              lastInspectionAt: formatDateInput(item.lastInspectionAt),
-                              nextInspectionAt: formatDateInput(item.nextInspectionAt),
-                            }}
-                          />
-                        </ActionModal>
+                        <div className="flex flex-wrap gap-2">
+                          <ActionModal
+                            title="Ubah peralatan"
+                            description="Perbarui data dasar peralatan tanpa keluar dari daftar."
+                            triggerLabel="Ubah peralatan"
+                          >
+                            <EquipmentUpsertForm
+                              mode="edit"
+                              categories={referenceData.categories}
+                              locations={referenceData.locations}
+                              initialValues={{
+                                id: item.id,
+                                code: item.code,
+                                name: item.name,
+                                categoryId: item.categoryId,
+                                locationId: item.locationId ?? "",
+                                brand: item.brand,
+                                model: item.model,
+                                serialNumber: item.serialNumber ?? "",
+                                status: item.status as EquipmentStatusValue,
+                                conditionNote: item.conditionNote,
+                                specificationNote: item.specificationNote,
+                                notes: item.notes,
+                                lastInspectionAt: formatDateInput(item.lastInspectionAt),
+                                nextInspectionAt: formatDateInput(item.nextInspectionAt),
+                              }}
+                            />
+                          </ActionModal>
+                          <Link
+                            href={`/equipment/${item.id}?tab=inspeksi`}
+                            className="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-slate-300 bg-white text-slate-700 transition hover:bg-slate-50"
+                            aria-label="Inspeksi"
+                            title="Inspeksi"
+                          >
+                            <ClipboardCheck className="h-4 w-4" />
+                            <span className="sr-only">Inspeksi</span>
+                          </Link>
+                          <Link
+                            href={`/equipment/${item.id}?tab=ikhtisar`}
+                            className="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-slate-300 bg-white text-slate-700 transition hover:bg-slate-50"
+                            aria-label="Detail"
+                            title="Detail"
+                          >
+                            <Eye className="h-4 w-4" />
+                            <span className="sr-only">Detail</span>
+                          </Link>
+                        </div>
                       </td>
                     </tr>
                   ))

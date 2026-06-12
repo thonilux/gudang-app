@@ -11,13 +11,11 @@ import {
 } from "@/lib/equipment";
 import { type EquipmentStatusValue } from "@/lib/equipment-shared";
 import {
-  findInspectionTemplateForEquipment,
   getEquipmentInspectionHistory,
   getInspectionResultLabel,
   getInspectionResultTone,
   getInspectionStatusLabel,
   getInspectionStatusTone,
-  getInspectionTemplatesForCategory,
 } from "@/lib/inspection";
 import { hasPermission } from "@/lib/rbac";
 
@@ -73,11 +71,6 @@ export default async function EquipmentDetailPage({
     { key: "inspeksi", label: "Inspeksi" },
   ];
 
-  const inspectionTemplates = await getInspectionTemplatesForCategory(detail.item.categoryId);
-  const activeInspectionTemplate = findInspectionTemplateForEquipment(
-    inspectionTemplates,
-    [detail.item.name, detail.item.brand, detail.item.model, detail.item.serialNumber ?? ""].join(" "),
-  );
   const inspectionHistory = tab === "inspeksi" ? await getEquipmentInspectionHistory(detail.item.id) : [];
 
   return (
@@ -426,25 +419,17 @@ export default async function EquipmentDetailPage({
               <div>
                 <h2 className="text-lg font-semibold">Inspeksi peralatan</h2>
                 <p className="mt-1 text-sm text-slate-500">
-                  Jalankan checklist sesuai kategori untuk memperbarui status equipment.
+                  Jalankan inspeksi umum sekarang. Template bisa dipakai nanti setelah rekap kategori siap.
                 </p>
               </div>
               <ShieldCheck className="h-5 w-5 text-slate-400" />
             </div>
 
             <div className="mt-5">
-              {activeInspectionTemplate ? (
-                <EquipmentInspectionForm
-                  equipmentId={detail.item.id}
-                  template={activeInspectionTemplate}
-                  redirectTo={`/equipment/${detail.item.id}?tab=inspeksi`}
-                />
-              ) : (
-                <div className="rounded-2xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-900">
-                  Belum ada template inspeksi aktif untuk kategori ini. Tambahkan template di panel admin
-                  agar tab inspeksi bisa dipakai.
-                </div>
-              )}
+              <EquipmentInspectionForm
+                equipmentId={detail.item.id}
+                redirectTo={`/equipment/${detail.item.id}?tab=inspeksi`}
+              />
             </div>
           </article>
 

@@ -1,5 +1,5 @@
 import { redirect } from "next/navigation";
-import { BarChart3, Package, Scale, Search, Warehouse } from "lucide-react";
+import { BarChart3, Eye, Package, Scale, Search, Warehouse } from "lucide-react";
 
 import { ActionModal } from "@/components/action-modal";
 import { getCurrentAuthSession } from "@/lib/auth";
@@ -210,27 +210,73 @@ export default async function BhpPage({
                       </td>
                       <td className="px-4 py-3 text-slate-600">{item.locationLabel ?? "-"}</td>
                       <td className="px-4 py-3">
-                        <ActionModal
-                          title="Ubah BHP"
-                          description="Perbarui data stok quantity-based langsung dari daftar."
-                          triggerLabel="Ubah BHP"
-                        >
-                          <WarehouseStockItemForm
-                            mode="edit"
-                            locations={locationOptions}
-                            initialValues={{
-                              id: item.id,
-                              sku: item.sku,
-                              name: item.name,
-                              unit: item.unit,
-                              category: item.category,
-                              locationId: item.locationId ?? "",
-                              currentQuantity: item.currentQuantity,
-                              minimumQuantity: item.minimumQuantity,
-                              notes: item.notes,
-                            }}
-                          />
-                        </ActionModal>
+                        <div className="flex flex-wrap gap-2">
+                          <ActionModal
+                            title="Detail BHP"
+                            description="Ringkasan stok quantity-based untuk item ini."
+                            triggerLabel="Detail BHP"
+                            triggerIcon={<Eye className="h-4 w-4" />}
+                          >
+                            <div className="grid gap-4 md:grid-cols-2">
+                              <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
+                                <p className="text-sm text-slate-500">Kode</p>
+                                <p className="mt-2 font-medium text-slate-900">{item.sku}</p>
+                              </div>
+                              <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
+                                <p className="text-sm text-slate-500">Nama</p>
+                                <p className="mt-2 font-medium text-slate-900">{item.name}</p>
+                              </div>
+                              <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
+                                <p className="text-sm text-slate-500">Kategori</p>
+                                <p className="mt-2 font-medium text-slate-900">{item.category || "Tanpa kategori"}</p>
+                              </div>
+                              <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
+                                <p className="text-sm text-slate-500">Lokasi</p>
+                                <p className="mt-2 font-medium text-slate-900">{item.locationLabel ?? "-"}</p>
+                              </div>
+                              <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
+                                <p className="text-sm text-slate-500">Jumlah</p>
+                                <p className="mt-2 font-medium text-slate-900">
+                                  {item.currentQuantity} {item.unit}
+                                </p>
+                              </div>
+                              <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
+                                <p className="text-sm text-slate-500">Ambang minimum</p>
+                                <p className="mt-2 font-medium text-slate-900">
+                                  {item.minimumQuantity} {item.unit}
+                                </p>
+                              </div>
+                            </div>
+
+                            <div className="mt-4 rounded-2xl border border-slate-200 bg-slate-50 p-4">
+                              <p className="text-sm text-slate-500">Catatan</p>
+                              <p className="mt-2 text-sm leading-6 text-slate-700">
+                                {item.notes || "Tidak ada catatan."}
+                              </p>
+                            </div>
+                          </ActionModal>
+                          <ActionModal
+                            title="Ubah BHP"
+                            description="Perbarui data stok quantity-based langsung dari daftar."
+                            triggerLabel="Ubah BHP"
+                          >
+                            <WarehouseStockItemForm
+                              mode="edit"
+                              locations={locationOptions}
+                              initialValues={{
+                                id: item.id,
+                                sku: item.sku,
+                                name: item.name,
+                                unit: item.unit,
+                                category: item.category,
+                                locationId: item.locationId ?? "",
+                                currentQuantity: item.currentQuantity,
+                                minimumQuantity: item.minimumQuantity,
+                                notes: item.notes,
+                              }}
+                            />
+                          </ActionModal>
+                        </div>
                       </td>
                     </tr>
                   ))
