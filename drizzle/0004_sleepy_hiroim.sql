@@ -1,0 +1,1 @@
+ALTER TABLE "warehouse_stock_items" ADD COLUMN "deleted_at" timestamp with time zone;

@@ -1,6 +1,6 @@
 "use server";
 
-import { eq, sql } from "drizzle-orm";
+import { asc, eq, sql } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { z } from "zod";
@@ -30,12 +30,17 @@ const categorySchema = z.object({
   key: optionalText,
   name: z.string().trim().min(1, "Nama kategori wajib diisi."),
   description: optionalText,
-  sortOrder: z.coerce.number().int().min(0).default(0),
   redirectTo: z.string().trim().optional(),
 });
 
 const deleteSchema = z.object({
   id: z.string().uuid(),
+  redirectTo: z.string().trim().optional(),
+});
+
+const moveSchema = z.object({
+  id: z.string().uuid(),
+  direction: z.enum(["up", "down"]),
   redirectTo: z.string().trim().optional(),
 });
 
@@ -70,6 +75,19 @@ function safeReturnPath(path?: string) {
   return "/admin/equipment-categories";
 }
 
+async function getNextSortOrder() {
+  const db = getDb();
+  const rows = await db
+    .select({
+      sortOrder: equipmentCategories.sortOrder,
+    })
+    .from(equipmentCategories)
+    .orderBy(asc(equipmentCategories.sortOrder), asc(equipmentCategories.name));
+
+  const lastSortOrder = rows.at(-1)?.sortOrder ?? 0;
+  return lastSortOrder + 10;
+}
+
 export async function createEquipmentCategoryAction(
   _state: EquipmentCategoryActionState,
   formData: FormData,
@@ -79,7 +97,6 @@ export async function createEquipmentCategoryAction(
     key: formData.get("key"),
     name: formData.get("name"),
     description: formData.get("description"),
-    sortOrder: formData.get("sortOrder"),
     redirectTo: formData.get("redirectTo"),
   });
 
@@ -100,13 +117,15 @@ export async function createEquipmentCategoryAction(
     return { error: "Key kategori sudah dipakai." };
   }
 
+  const sortOrder = await getNextSortOrder();
+
   const [created] = await db
     .insert(equipmentCategories)
     .values({
       key,
       name: parsed.data.name,
       description: parsed.data.description ?? "",
-      sortOrder: parsed.data.sortOrder,
+      sortOrder,
       updatedAt: new Date(),
     })
     .returning({ id: equipmentCategories.id, name: equipmentCategories.name });
@@ -119,7 +138,7 @@ export async function createEquipmentCategoryAction(
     summary: `Menambahkan kategori equipment ${parsed.data.name}`,
     metadata: {
       key,
-      sortOrder: parsed.data.sortOrder,
+      sortOrder,
     },
   });
 
@@ -139,7 +158,6 @@ export async function updateEquipmentCategoryAction(
     key: formData.get("key"),
     name: formData.get("name"),
     description: formData.get("description"),
-    sortOrder: formData.get("sortOrder"),
     redirectTo: formData.get("redirectTo"),
   });
 
@@ -173,7 +191,6 @@ export async function updateEquipmentCategoryAction(
       key,
       name: parsed.data.name,
       description: parsed.data.description ?? "",
-      sortOrder: parsed.data.sortOrder,
       updatedAt: new Date(),
     })
     .where(eq(equipmentCategories.id, parsed.data.id));
@@ -186,7 +203,71 @@ export async function updateEquipmentCategoryAction(
     summary: `Memperbarui kategori equipment ${parsed.data.name}`,
     metadata: {
       key,
-      sortOrder: parsed.data.sortOrder,
+    },
+  });
+
+  revalidatePath("/admin");
+  revalidatePath("/admin/equipment-categories");
+  revalidatePath("/equipment");
+  redirect(safeReturnPath(parsed.data.redirectTo));
+}
+
+export async function moveEquipmentCategoryAction(formData: FormData): Promise<void> {
+  const session = await requireAdminAccess();
+  const parsed = moveSchema.safeParse({
+    id: formData.get("id"),
+    direction: formData.get("direction"),
+    redirectTo: formData.get("redirectTo"),
+  });
+
+  if (!parsed.success) {
+    redirect(safeReturnPath(formData.get("redirectTo") ? String(formData.get("redirectTo")) : undefined));
+  }
+
+  const db = getDb();
+  const categories = await db
+    .select({
+      id: equipmentCategories.id,
+      sortOrder: equipmentCategories.sortOrder,
+      name: equipmentCategories.name,
+    })
+    .from(equipmentCategories)
+    .orderBy(asc(equipmentCategories.sortOrder), asc(equipmentCategories.name), asc(equipmentCategories.id));
+
+  const currentIndex = categories.findIndex((category) => category.id === parsed.data.id);
+  if (currentIndex === -1) {
+    redirect(safeReturnPath(parsed.data.redirectTo));
+  }
+
+  const targetIndex = parsed.data.direction === "up" ? currentIndex - 1 : currentIndex + 1;
+  if (targetIndex < 0 || targetIndex >= categories.length) {
+    redirect(safeReturnPath(parsed.data.redirectTo));
+  }
+
+  const current = categories[currentIndex];
+  const target = categories[targetIndex];
+
+  await db.transaction(async (tx) => {
+    await tx
+      .update(equipmentCategories)
+      .set({ sortOrder: target.sortOrder, updatedAt: new Date() })
+      .where(eq(equipmentCategories.id, current.id));
+
+    await tx
+      .update(equipmentCategories)
+      .set({ sortOrder: current.sortOrder, updatedAt: new Date() })
+      .where(eq(equipmentCategories.id, target.id));
+  });
+
+  await writeAuditLog({
+    userId: session.user.id,
+    action: "equipment_category.reorder",
+    entityType: "equipment_category",
+    entityId: current.id,
+    summary: `Mengubah urutan kategori equipment ${current.name}`,
+    metadata: {
+      direction: parsed.data.direction,
+      targetId: target.id,
     },
   });
 

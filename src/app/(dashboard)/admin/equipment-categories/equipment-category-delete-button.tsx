@@ -27,13 +27,13 @@ export function EquipmentCategoryDeleteButton({
       <button
         type="submit"
         disabled={!canDelete || pending}
-        className="inline-flex items-center gap-2 rounded-xl border border-border bg-panel px-3 py-2 text-sm font-medium text-text transition hover:bg-panelAlt disabled:cursor-not-allowed disabled:opacity-50"
+        aria-label="Hapus"
+        title="Hapus"
+        className="inline-flex h-9 w-9 items-center justify-center rounded-xl border border-border bg-panel text-text transition hover:bg-panelAlt disabled:cursor-not-allowed disabled:opacity-50"
       >
         {pending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Trash2 className="h-4 w-4" />}
-        Hapus
       </button>
       {state.error ? <p className="text-xs text-rose-600">{state.error}</p> : null}
     </form>
   );
 }
-

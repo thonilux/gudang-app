@@ -1,6 +1,6 @@
 "use server";
 
-import { eq } from "drizzle-orm";
+import { and, eq, isNull } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { z } from "zod";
@@ -16,7 +16,7 @@ import {
   warehouseSerialItems,
 } from "@/db/schema";
 import { getCurrentAuthSession, writeAuditLog } from "@/lib/auth";
-import { hasPermission } from "@/lib/rbac";
+import { hasPermission, isAdmin } from "@/lib/rbac";
 
 export type WarehouseActionState = {
   error?: string;
@@ -43,6 +43,7 @@ const locationSchema = z.object({
 });
 
 const stockItemSchema = z.object({
+  id: z.string().uuid().optional(),
   sku: z.string().trim().min(1, "Kode bahan habis pakai wajib diisi."),
   name: z.string().trim().min(1, "Nama bahan habis pakai wajib diisi."),
   unit: z.string().trim().min(1, "Satuan wajib diisi."),
@@ -51,6 +52,11 @@ const stockItemSchema = z.object({
   currentQuantity: z.coerce.number().int().min(0),
   minimumQuantity: z.coerce.number().int().min(0),
   notes: optionalText,
+});
+
+const deleteStockItemSchema = z.object({
+  id: z.string().uuid(),
+  redirectTo: z.string().trim().optional(),
 });
 
 const movementSchema = z.object({
@@ -69,8 +75,8 @@ const opnameSchema = z.object({
 });
 
 const serialItemSchema = z.object({
-  serialNumber: z.string().trim().min(1, "ID aset unik wajib diisi."),
-  name: z.string().trim().min(1, "Nama aset wajib diisi."),
+  serialNumber: z.string().trim().min(1, "ID peralatan wajib diisi."),
+  name: z.string().trim().min(1, "Nama peralatan wajib diisi."),
   category: optionalText,
   locationId: optionalUuid,
   status: z.enum(["ready", "in_use", "maintenance", "retired"]),
@@ -90,6 +96,19 @@ async function requireWarehouseWriteAccess() {
   }
 
   if (!hasPermission(session, "warehouse.write")) {
+    redirect("/akses-ditolak");
+  }
+
+  return session;
+}
+
+async function requireWarehouseAdminAccess() {
+  const session = await getCurrentAuthSession();
+  if (!session) {
+    redirect("/login");
+  }
+
+  if (!isAdmin(session)) {
     redirect("/akses-ditolak");
   }
 
@@ -120,7 +139,7 @@ export async function createWarehouseLocationAction(
   _state: WarehouseActionState,
   formData: FormData,
 ): Promise<WarehouseActionState> {
-  const session = await requireWarehouseWriteAccess();
+  const session = await requireWarehouseAdminAccess();
   const parsed = locationSchema.safeParse({
     code: formData.get("code"),
     name: formData.get("name"),
@@ -156,6 +175,7 @@ export async function createWarehouseLocationAction(
 
   revalidatePath("/dashboard");
   revalidatePath("/warehouse");
+  revalidatePath("/bhp");
   redirect(safeReturnPath(formData.get("redirectTo") ? String(formData.get("redirectTo")) : undefined));
 }
 
@@ -207,7 +227,132 @@ export async function createWarehouseStockItemAction(
 
   revalidatePath("/dashboard");
   revalidatePath("/warehouse");
+  revalidatePath("/bhp");
   redirect(safeReturnPath(formData.get("redirectTo") ? String(formData.get("redirectTo")) : undefined));
+}
+
+export async function updateWarehouseStockItemAction(
+  _state: WarehouseActionState,
+  formData: FormData,
+): Promise<WarehouseActionState> {
+  const session = await requireWarehouseWriteAccess();
+  const parsed = stockItemSchema.safeParse({
+    id: formData.get("id"),
+    sku: formData.get("sku"),
+    name: formData.get("name"),
+    unit: formData.get("unit"),
+    category: formData.get("category"),
+    locationId: formData.get("locationId"),
+    currentQuantity: formData.get("currentQuantity"),
+    minimumQuantity: formData.get("minimumQuantity"),
+    notes: formData.get("notes"),
+  });
+
+  if (!parsed.success) {
+    return { error: parsed.error.issues[0]?.message ?? "Data stok tidak valid." };
+  }
+
+  if (!parsed.data.id) {
+    return { error: "Data stok tidak valid." };
+  }
+
+  const db = getDb();
+  const existing = await db.query.warehouseStockItems.findFirst({
+    where: and(eq(warehouseStockItems.id, parsed.data.id), isNull(warehouseStockItems.deletedAt)),
+  });
+
+  if (!existing) {
+    return { error: "Stok tidak ditemukan." };
+  }
+
+  const status = normalizeStatus(parsed.data.currentQuantity, parsed.data.minimumQuantity);
+  await db
+    .update(warehouseStockItems)
+    .set({
+      sku: parsed.data.sku,
+      name: parsed.data.name,
+      unit: parsed.data.unit,
+      category: parsed.data.category ?? "",
+      locationId: parsed.data.locationId ?? null,
+      currentQuantity: parsed.data.currentQuantity,
+      minimumQuantity: parsed.data.minimumQuantity,
+      status,
+      notes: parsed.data.notes ?? "",
+      updatedAt: new Date(),
+    })
+    .where(eq(warehouseStockItems.id, parsed.data.id));
+
+  await writeAuditLog({
+    userId: session.user.id,
+    action: "warehouse.stock_item.update",
+    entityType: "warehouse_stock_item",
+    entityId: existing.id,
+    summary: `Memperbarui stok gudang ${parsed.data.sku}`,
+  });
+
+  revalidatePath("/dashboard");
+  revalidatePath("/warehouse");
+  revalidatePath("/bhp");
+  redirect(safeReturnPath(formData.get("redirectTo") ? String(formData.get("redirectTo")) : undefined));
+}
+
+export async function deleteWarehouseStockItemAction(
+  _state: WarehouseActionState,
+  formData: FormData,
+): Promise<WarehouseActionState> {
+  const session = await requireWarehouseWriteAccess();
+  const parsed = deleteStockItemSchema.safeParse({
+    id: formData.get("id"),
+    redirectTo: formData.get("redirectTo"),
+  });
+
+  if (!parsed.success) {
+    return { error: parsed.error.issues[0]?.message ?? "Konfirmasi delete tidak valid." };
+  }
+
+  const db = getDb();
+  const existing = await db.query.warehouseStockItems.findFirst({
+    where: and(eq(warehouseStockItems.id, parsed.data.id), isNull(warehouseStockItems.deletedAt)),
+  });
+
+  if (!existing) {
+    return { error: "Stok tidak ditemukan." };
+  }
+
+  const now = new Date();
+
+  await db.transaction(async (tx) => {
+    await tx.insert(warehouseStockMovements).values({
+      stockItemId: existing.id,
+      movementType: "delete",
+      quantity: existing.currentQuantity,
+      fromLocationId: existing.locationId,
+      toLocationId: null,
+      note: "BHP dihapus dari inventaris. Riwayat mutasi tetap disimpan.",
+      changedByUserId: session.user.id,
+    });
+
+    await tx
+      .update(warehouseStockItems)
+      .set({
+        deletedAt: now,
+        updatedAt: now,
+      })
+      .where(eq(warehouseStockItems.id, existing.id));
+  });
+
+  await writeAuditLog({
+    userId: session.user.id,
+    action: "warehouse.stock_item.delete",
+    entityType: "warehouse_stock_item",
+    entityId: existing.id,
+    summary: `Menghapus stok gudang ${existing.sku}`,
+  });
+
+  revalidatePath("/dashboard");
+  revalidatePath("/warehouse");
+  revalidatePath("/bhp");
+  redirect(safeReturnPath(parsed.data.redirectTo));
 }
 
 export async function recordWarehouseMovementAction(
@@ -230,7 +375,7 @@ export async function recordWarehouseMovementAction(
 
   const db = getDb();
   const item = await db.query.warehouseStockItems.findFirst({
-    where: eq(warehouseStockItems.id, parsed.data.stockItemId),
+    where: and(eq(warehouseStockItems.id, parsed.data.stockItemId), isNull(warehouseStockItems.deletedAt)),
   });
 
   if (!item) {
@@ -292,6 +437,7 @@ export async function recordWarehouseMovementAction(
 
   revalidatePath("/dashboard");
   revalidatePath("/warehouse");
+  revalidatePath("/bhp");
   return {};
 }
 
@@ -312,7 +458,7 @@ export async function recordWarehouseOpnameAction(
 
   const db = getDb();
   const item = await db.query.warehouseStockItems.findFirst({
-    where: eq(warehouseStockItems.id, parsed.data.stockItemId),
+    where: and(eq(warehouseStockItems.id, parsed.data.stockItemId), isNull(warehouseStockItems.deletedAt)),
   });
 
   if (!item) {
@@ -379,6 +525,7 @@ export async function recordWarehouseOpnameAction(
 
   revalidatePath("/dashboard");
   revalidatePath("/warehouse");
+  revalidatePath("/bhp");
   return {};
 }
 
@@ -419,11 +566,12 @@ export async function createWarehouseSerialItemAction(
     action: "warehouse.serial_item.create",
     entityType: "warehouse_serial_item",
     entityId: row.id,
-    summary: `Menambahkan aset unik ${parsed.data.serialNumber}`,
+    summary: `Menambahkan peralatan ${parsed.data.serialNumber}`,
   });
 
   revalidatePath("/dashboard");
   revalidatePath("/warehouse");
+  revalidatePath("/bhp");
   return {};
 }
 
@@ -475,7 +623,7 @@ export async function moveWarehouseSerialItemAction(
     action: "warehouse.serial_item.move",
     entityType: "warehouse_serial_item",
     entityId: item.id,
-    summary: `Memindahkan aset unik ${item.serialNumber}`,
+    summary: `Memindahkan peralatan ${item.serialNumber}`,
   });
 
   revalidatePath("/dashboard");

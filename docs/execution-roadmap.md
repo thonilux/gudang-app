@@ -82,20 +82,34 @@ Prioritas prompt:
 3. detail peralatan dengan tab
 4. form tambah/edit
 
-### Fase 3: Warehouse Sebagai Pendukung
+### Fase 3: Warehouse Sebagai Inventory dan Log
 
 Tujuan:
 
 - lokasi gudang terstruktur
-- perpindahan barang tercatat
-- stok non-serial tetap bisa dikelola
+- peralatan ber-ID bisa dilihat per lokasi
+- log mutasi peralatan tercatat
 
 Fitur:
 
 - hierarki lokasi
-- movement log
+- display peralatan per warehouse
+- movement log peralatan
+- lokasi sebagai konteks, bukan pusat CRUD stok
+
+### Fase 3b: BHP
+
+Tujuan:
+
+- stok quantity-based punya rumah sendiri
+- mutasi stok dan opname tidak bercampur dengan peralatan
+
+Fitur:
+
 - stock items
+- movement log stok
 - stock opname
+- peringatan restock
 
 Catatan:
 
@@ -274,4 +288,3 @@ Sebuah prompt baru siap dieksekusi jika:
 - file yang terdampak disebutkan
 - hasil akhirnya bisa diverifikasi
 - tidak mencampur banyak domain yang berbeda
-

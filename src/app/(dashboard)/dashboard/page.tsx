@@ -9,6 +9,7 @@ import {
   getEquipmentStatusTone,
 } from "@/lib/equipment";
 import { getWarehouseCountsSummary, getWarehouseOverview } from "@/lib/warehouse";
+import { getWarehouseMovementLabel } from "@/lib/warehouse-shared";
 
 export const dynamic = "force-dynamic";
 
@@ -68,7 +69,7 @@ export default async function DashboardPage() {
       icon: FileClock,
     },
     {
-      label: "Restock",
+      label: "BHP restock",
       value: warehouseSummary.lowStockCount.toString(),
       note: "Item gudang di bawah ambang minimum.",
       icon: ShieldAlert,
@@ -220,9 +221,9 @@ export default async function DashboardPage() {
 
       <section className="grid gap-4 lg:grid-cols-[1fr_1fr]">
         <article className="rounded-2xl border border-slate-200 bg-white p-6 shadow-soft">
-          <h2 className="text-lg font-semibold">Gudang yang aktif</h2>
+          <h2 className="text-lg font-semibold">BHP yang aktif</h2>
           <p className="mt-1 text-sm text-slate-500">
-            Struktur gudang dan stok yang sekarang sudah terdaftar.
+            Stok quantity-based yang sekarang sudah terdaftar.
           </p>
           <div className="mt-4 overflow-hidden rounded-2xl border border-slate-200">
             <table className="min-w-full divide-y divide-slate-200 text-left text-sm">
@@ -237,7 +238,7 @@ export default async function DashboardPage() {
                 {warehouseOverview.items.length === 0 ? (
                   <tr>
                     <td className="px-4 py-5 text-slate-500" colSpan={3}>
-                      Belum ada stok gudang.
+                      Belum ada BHP.
                     </td>
                   </tr>
                 ) : (
@@ -257,13 +258,13 @@ export default async function DashboardPage() {
         </article>
 
         <article className="rounded-2xl border border-slate-200 bg-white p-6 shadow-soft">
-          <h2 className="text-lg font-semibold">Mutasi gudang terbaru</h2>
+          <h2 className="text-lg font-semibold">Mutasi BHP terbaru</h2>
           <p className="mt-1 text-sm text-slate-500">
             Ringkasan pergerakan stok non-serial yang baru masuk ke log.
           </p>
           <div className="mt-4 space-y-4">
             {warehouseOverview.movements.length === 0 ? (
-              <p className="text-sm text-slate-500">Belum ada mutasi gudang.</p>
+              <p className="text-sm text-slate-500">Belum ada mutasi BHP.</p>
             ) : (
               warehouseOverview.movements.slice(0, 4).map((movement) => (
                 <div key={movement.id} className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
@@ -271,7 +272,7 @@ export default async function DashboardPage() {
                     {movement.stockItemSku} - {movement.stockItemName}
                   </p>
                   <p className="mt-1 text-xs text-slate-500">
-                    {movement.movementType} · {movement.quantity} ·{" "}
+                    {getWarehouseMovementLabel(movement.movementType)} · {movement.quantity} ·{" "}
                     {movement.createdAt.toLocaleString("id-ID")}
                   </p>
                 </div>

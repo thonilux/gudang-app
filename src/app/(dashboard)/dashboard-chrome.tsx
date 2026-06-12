@@ -38,8 +38,9 @@ type DashboardChromeProps = {
 
 const MENU: DashboardMenuItem[] = [
   { href: "/dashboard", label: "Dasbor", icon: LayoutDashboard },
-  { href: "/equipment", label: "Peralatan", icon: Package2 },
   { href: "/warehouse", label: "Warehouse", icon: Warehouse },
+  { href: "/equipment", label: "Peralatan", icon: Package2 },
+  { href: "/bhp", label: "BHP", icon: Package2 },
   { href: "/audit", label: "Audit", icon: ShieldCheck },
 ];
 

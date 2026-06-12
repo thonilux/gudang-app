@@ -1,6 +1,6 @@
 import "server-only";
 
-import { asc, desc, eq, sql } from "drizzle-orm";
+import { asc, desc, eq, isNull, sql } from "drizzle-orm";
 
 import { getDb } from "@/db";
 import {
@@ -26,6 +26,7 @@ export type WarehouseItemListItem = {
   category: string;
   currentQuantity: number;
   minimumQuantity: number;
+  locationId: string | null;
   locationLabel: string | null;
   status: string;
   notes: string;
@@ -61,6 +62,7 @@ export type WarehouseSerialItemListItem = {
   category: string;
   status: string;
   notes: string;
+  locationId: string | null;
   locationLabel: string | null;
   updatedAt: Date;
 };
@@ -156,6 +158,7 @@ export async function getWarehouseOverview() {
         updatedAt: warehouseStockItems.updatedAt,
       })
       .from(warehouseStockItems)
+      .where(isNull(warehouseStockItems.deletedAt))
       .orderBy(desc(warehouseStockItems.updatedAt), desc(warehouseStockItems.createdAt)),
     db
       .select({
@@ -214,6 +217,7 @@ export async function getWarehouseOverview() {
       category: row.category,
       currentQuantity: row.currentQuantity,
       minimumQuantity: row.minimumQuantity,
+      locationId: row.locationId,
       locationLabel: row.locationId ? locationLabelMap.getLabel(row.locationId) : null,
       status:
         row.currentQuantity <= 0
@@ -304,6 +308,7 @@ export async function getWarehouseSerialOverview() {
       category: row.category,
       status: row.status,
       notes: row.notes,
+      locationId: row.locationId,
       locationLabel: row.locationId ? locationLabelMap.getLabel(row.locationId) : null,
       updatedAt: row.updatedAt,
     })) satisfies WarehouseSerialItemListItem[],
@@ -400,6 +405,7 @@ export async function getWarehouseStockItemOptions() {
       name: warehouseStockItems.name,
     })
     .from(warehouseStockItems)
+    .where(isNull(warehouseStockItems.deletedAt))
     .orderBy(asc(warehouseStockItems.sku));
 
   return items.map((item) => ({
@@ -427,7 +433,8 @@ export async function getWarehouseCountsSummary() {
         )::int
       `,
     })
-    .from(warehouseStockItems);
+    .from(warehouseStockItems)
+    .where(isNull(warehouseStockItems.deletedAt));
 
   return {
     totalQuantity: result[0]?.totalQuantity ?? 0,

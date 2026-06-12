@@ -15,14 +15,12 @@ type CategoryValues = {
   key: string;
   name: string;
   description: string;
-  sortOrder: string;
 };
 
 const emptyValues: CategoryValues = {
   key: "",
   name: "",
   description: "",
-  sortOrder: "10",
 };
 
 export function EquipmentCategoryForm({
@@ -67,6 +65,12 @@ export function EquipmentCategoryForm({
         <p className="mt-2 text-xs">Saran otomatis: {suggestedKey || "-"}</p>
       </div>
 
+      <div className="rounded-2xl border border-border bg-panel px-4 py-3 text-sm text-muted">
+        <span className="font-medium text-text">Urutan tampil</span> akan dibuat otomatis saat
+        kategori disimpan. Setelah itu, kamu bisa ubah posisinya dari daftar kategori dengan tombol
+        naik/turun.
+      </div>
+
       <label className="block space-y-2">
         <span className="text-sm font-medium text-text">Key kategori</span>
         <input
@@ -89,7 +93,7 @@ export function EquipmentCategoryForm({
         />
       </label>
 
-      <div className="grid gap-4 md:grid-cols-[1fr_7rem]">
+      <div className="grid gap-4">
         <label className="block space-y-2">
           <span className="text-sm font-medium text-text">Deskripsi</span>
           <textarea
@@ -102,22 +106,6 @@ export function EquipmentCategoryForm({
             className="w-full rounded-xl border border-border bg-panel px-4 py-3 text-sm outline-none transition focus:border-accent"
           />
         </label>
-
-        <label className="block space-y-2">
-        <span className="text-sm font-medium text-text">Urutan tampil</span>
-        <input
-          name="sortOrder"
-          type="number"
-          min="0"
-          value={values.sortOrder}
-          onChange={(event) => setValues((current) => ({ ...current, sortOrder: event.target.value }))}
-          className="w-full rounded-xl border border-border bg-panel px-4 py-3 text-sm outline-none transition focus:border-accent"
-        />
-        <p className="text-xs leading-5 text-muted">
-          Angka kecil tampil lebih atas. Disarankan pakai kelipatan 10 supaya mudah menyisipkan
-          kategori baru di tengah.
-        </p>
-      </label>
       </div>
 
       {state.error ? (

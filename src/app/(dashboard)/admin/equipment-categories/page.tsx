@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { asc, sql } from "drizzle-orm";
-import { ArrowRightLeft, Plus, Tags } from "lucide-react";
+import { ArrowRightLeft, PencilLine, Plus, Tags } from "lucide-react";
 
 import { getDb } from "@/db";
 import { equipment, equipmentCategories } from "@/db/schema";
@@ -9,6 +9,7 @@ import { getCurrentAuthSession } from "@/lib/auth";
 import { isAdmin } from "@/lib/rbac";
 
 import { EquipmentCategoryDeleteButton } from "./equipment-category-delete-button";
+import { EquipmentCategoryMoveButtons } from "./equipment-category-move-buttons";
 import { EquipmentCategoryForm } from "./equipment-category-form";
 
 export const dynamic = "force-dynamic";
@@ -72,9 +73,10 @@ export default async function EquipmentCategoriesAdminPage({ searchParams }: Pag
           ubah, dan hapus kategori tanpa menyentuh struktur form inventaris.
         </p>
         <div className="mt-5 rounded-2xl border border-border bg-panelAlt px-4 py-3 text-sm text-muted">
-          <span className="font-medium text-text">Urutan tampil</span> memakai angka kecil ke
-          atas. Kita sengaja pakai kelipatan 10 supaya nanti gampang menyisipkan kategori baru
-          tanpa merombak semua urutan.
+          <span className="font-medium text-text">Urutan tampil</span> di layar mengikuti
+          posisi daftar 1, 2, 3, dan seterusnya. Di belakang layar, sistem tetap menyimpan
+          angka urut dengan celah 10 supaya gampang menyisipkan kategori baru tanpa merombak
+          semua data.
         </div>
       </section>
 
@@ -104,9 +106,6 @@ export default async function EquipmentCategoriesAdminPage({ searchParams }: Pag
           <div className="flex items-center justify-between gap-3">
             <div>
               <h2 className="text-lg font-semibold text-text">Daftar kategori</h2>
-              <p className="mt-1 text-sm text-muted">
-                Urutan ditentukan oleh nilai sort order, lalu nama kategori.
-              </p>
             </div>
             <Tags className="h-5 w-5 text-accent" />
           </div>
@@ -117,7 +116,7 @@ export default async function EquipmentCategoriesAdminPage({ searchParams }: Pag
                 <tr>
                   <th className="px-4 py-3 font-medium">Kategori</th>
                   <th className="px-4 py-3 font-medium">Key</th>
-                  <th className="px-4 py-3 font-medium">Urut</th>
+                  <th className="px-4 py-3 font-medium">Posisi</th>
                   <th className="px-4 py-3 font-medium">Dipakai</th>
                   <th className="px-4 py-3 font-medium">Aksi</th>
                 </tr>
@@ -130,14 +129,15 @@ export default async function EquipmentCategoriesAdminPage({ searchParams }: Pag
                     </td>
                   </tr>
                 ) : (
-                  categories.map((category) => {
+                  categories.map((category, index) => {
                     const usageCount = usageByCategoryId[category.id] ?? 0;
                     const canDelete = usageCount === 0;
+                    const canMoveUp = index > 0;
+                    const canMoveDown = index < categories.length - 1;
                     return (
                       <tr key={category.id}>
                         <td className="px-4 py-3">
                           <p className="font-medium text-text">{category.name}</p>
-                          <p className="mt-1 text-xs text-muted">{category.description || "Tanpa deskripsi"}</p>
                         </td>
                         <td className="px-4 py-3 text-muted">
                           <code className="rounded-lg border border-border bg-panelAlt px-2 py-1 text-xs">
@@ -146,7 +146,7 @@ export default async function EquipmentCategoriesAdminPage({ searchParams }: Pag
                         </td>
                         <td className="px-4 py-3">
                           <span className="inline-flex items-center rounded-full border border-border bg-panelAlt px-3 py-1 text-xs font-medium text-muted">
-                            {category.sortOrder}
+                            {index + 1}
                           </span>
                         </td>
                         <td className="px-4 py-3">
@@ -157,11 +157,18 @@ export default async function EquipmentCategoriesAdminPage({ searchParams }: Pag
                         </td>
                         <td className="px-4 py-3">
                           <div className="flex flex-wrap items-center gap-2">
+                            <EquipmentCategoryMoveButtons
+                              categoryId={category.id}
+                              canMoveUp={canMoveUp}
+                              canMoveDown={canMoveDown}
+                            />
                             <Link
                               href={`/admin/equipment-categories?edit=${category.id}`}
-                              className="inline-flex items-center justify-center rounded-xl border border-border bg-panel px-3 py-2 text-sm font-medium text-text transition hover:bg-panelAlt"
+                              aria-label="Ubah"
+                              title="Ubah"
+                              className="inline-flex h-9 w-9 items-center justify-center rounded-xl border border-border bg-panel text-text transition hover:bg-panelAlt"
                             >
-                              Ubah
+                              <PencilLine className="h-4 w-4" />
                             </Link>
                             <EquipmentCategoryDeleteButton
                               categoryId={category.id}
@@ -203,7 +210,6 @@ export default async function EquipmentCategoriesAdminPage({ searchParams }: Pag
                       key: editingCategory.key,
                       name: editingCategory.name,
                       description: editingCategory.description ?? "",
-                      sortOrder: String(editingCategory.sortOrder),
                     }
                   : undefined
               }

@@ -29,6 +29,13 @@
       "when": 1781158109435,
       "tag": "0003_bright_sabretooth",
       "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1781228997702,
+      "tag": "0004_sleepy_hiroim",
+      "breakpoints": true
     }
   ]
 }

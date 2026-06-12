@@ -27,13 +27,19 @@ export type EquipmentListItem = {
   id: string;
   code: string;
   name: string;
+  categoryId: string;
   brand: string;
   model: string;
   serialNumber: string | null;
   status: string;
   conditionNote: string;
   categoryName: string | null;
+  locationId: string | null;
   locationLabel: string | null;
+  specificationNote: string;
+  notes: string;
+  lastInspectionAt: Date | null;
+  nextInspectionAt: Date | null;
   updatedAt: Date;
 };
 
@@ -193,18 +199,23 @@ export async function getEquipmentList() {
   const [rows, allLocationRows] = await Promise.all([
     db
       .select({
-        id: equipment.id,
-        code: equipment.code,
-        name: equipment.name,
-        brand: equipment.brand,
-        model: equipment.model,
-        serialNumber: equipment.serialNumber,
-        status: equipment.status,
-        conditionNote: equipment.conditionNote,
-        categoryName: equipmentCategories.name,
-        locationId: equipment.locationId,
-        updatedAt: equipment.updatedAt,
-      })
+      id: equipment.id,
+      code: equipment.code,
+      name: equipment.name,
+      categoryId: equipment.categoryId,
+      brand: equipment.brand,
+      model: equipment.model,
+      serialNumber: equipment.serialNumber,
+      status: equipment.status,
+      conditionNote: equipment.conditionNote,
+      categoryName: equipmentCategories.name,
+      locationId: equipment.locationId,
+      specificationNote: equipment.specificationNote,
+      notes: equipment.notes,
+      lastInspectionAt: equipment.lastInspectionAt,
+      nextInspectionAt: equipment.nextInspectionAt,
+      updatedAt: equipment.updatedAt,
+    })
       .from(equipment)
       .leftJoin(equipmentCategories, eq(equipment.categoryId, equipmentCategories.id))
       .leftJoin(equipmentLocations, eq(equipment.locationId, equipmentLocations.id))
@@ -226,13 +237,19 @@ export async function getEquipmentList() {
     id: row.id,
     code: row.code,
     name: row.name,
+    categoryId: row.categoryId,
     brand: row.brand,
     model: row.model,
     serialNumber: row.serialNumber,
     status: row.status,
     conditionNote: row.conditionNote,
     categoryName: row.categoryName ?? null,
+    locationId: row.locationId,
     locationLabel: row.locationId ? locationLabelMap.getLabel(row.locationId) : null,
+    specificationNote: row.specificationNote,
+    notes: row.notes,
+    lastInspectionAt: row.lastInspectionAt,
+    nextInspectionAt: row.nextInspectionAt,
     updatedAt: row.updatedAt,
   })) satisfies EquipmentListItem[];
 }

@@ -7,7 +7,20 @@ export const WAREHOUSE_MOVEMENT_TYPES = [
 export type WarehouseMovementType = (typeof WAREHOUSE_MOVEMENT_TYPES)[number]["value"];
 
 export function getWarehouseMovementLabel(type: string) {
-  return WAREHOUSE_MOVEMENT_TYPES.find((item) => item.value === type)?.label ?? type;
+  switch (type) {
+    case "in":
+      return "Masuk";
+    case "out":
+      return "Keluar";
+    case "transfer":
+      return "Pindah lokasi";
+    case "opname":
+      return "Penyesuaian opname";
+    case "delete":
+      return "Hapus stok";
+    default:
+      return WAREHOUSE_MOVEMENT_TYPES.find((item) => item.value === type)?.label ?? type;
+  }
 }
 
 export function getWarehouseQuantityTone(quantity: number, minimumQuantity: number) {

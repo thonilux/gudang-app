@@ -50,6 +50,7 @@ export const warehouseStockItems = pgTable(
     status: text("status").notNull().default("available"),
     notes: text("notes").notNull().default(""),
     metadata: jsonb("metadata").notNull().default({}),
+    deletedAt: timestamp("deleted_at", { withTimezone: true }),
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
     updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
   },
