@@ -11,6 +11,7 @@ import {
 } from "@/lib/equipment";
 import { type EquipmentStatusValue } from "@/lib/equipment-shared";
 import {
+  getInspectionTemplatesForCategory,
   getEquipmentInspectionHistory,
   getInspectionResultLabel,
   getInspectionResultTone,
@@ -71,6 +72,8 @@ export default async function EquipmentDetailPage({
     { key: "inspeksi", label: "Inspeksi" },
   ];
 
+  const inspectionTemplates =
+    tab === "inspeksi" ? await getInspectionTemplatesForCategory(detail.item.categoryId) : [];
   const inspectionHistory = tab === "inspeksi" ? await getEquipmentInspectionHistory(detail.item.id) : [];
 
   return (
@@ -428,6 +431,7 @@ export default async function EquipmentDetailPage({
             <div className="mt-5">
               <EquipmentInspectionForm
                 equipmentId={detail.item.id}
+                templates={inspectionTemplates}
                 redirectTo={`/equipment/${detail.item.id}?tab=inspeksi`}
               />
             </div>
