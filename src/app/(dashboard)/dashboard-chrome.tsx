@@ -6,6 +6,7 @@ import { type ReactNode, useMemo, useState } from "react";
 import {
   Building2,
   ClipboardCheck,
+  CalendarDays,
   type LucideIcon,
   LayoutDashboard,
   LogOut,
@@ -14,6 +15,7 @@ import {
   Settings2,
   ShieldCheck,
   Tags,
+  Wrench,
   Warehouse,
   X,
 } from "lucide-react";
@@ -40,9 +42,11 @@ type DashboardChromeProps = {
 const MENU: DashboardMenuItem[] = [
   { href: "/dashboard", label: "Dasbor", icon: LayoutDashboard },
   { href: "/inspections", label: "Inspeksi", icon: ClipboardCheck },
+  { href: "/events", label: "Events", icon: CalendarDays },
   { href: "/warehouse", label: "Warehouse", icon: Warehouse },
   { href: "/equipment", label: "Peralatan", icon: Package2 },
   { href: "/bhp", label: "BHP", icon: Package2 },
+  { href: "/maintenance", label: "Maintenance", icon: Wrench },
   { href: "/audit", label: "Audit", icon: ShieldCheck },
 ];
 

@@ -69,6 +69,24 @@ const roles = [
     ],
   },
   {
+    key: "qc",
+    name: "QC",
+    description: "Quality control untuk inspeksi, return, dan tindak lanjut.",
+    permissions: [
+      "dashboard.view",
+      "audit.read",
+      "equipment.read",
+      "events.read",
+      "events.write",
+      "inspections.read",
+      "inspections.write",
+      "maintenance.read",
+      "maintenance.write",
+      "measurements.read",
+      "measurements.write",
+    ],
+  },
+  {
     key: "warehouse",
     name: "Gudang",
     description: "Mengelola perpindahan dan barang stok.",
@@ -104,6 +122,8 @@ const roles = [
 const dbUrl = process.env.DATABASE_URL;
 const email = process.env.AUTH_BOOTSTRAP_EMAIL;
 const password = process.env.AUTH_BOOTSTRAP_PASSWORD;
+const qcEmail = process.env.AUTH_QC_EMAIL ?? "qc@gudang.local";
+const qcPassword = process.env.AUTH_QC_PASSWORD ?? "QCTest!2026";
 
 if (!dbUrl) {
   throw new Error("DATABASE_URL wajib diisi.");
@@ -162,8 +182,8 @@ async function main() {
       }
     }
 
-    const passwordHash = await bcrypt.hash(password, 10);
-    const userName = email.split("@")[0] || "Administrator";
+    const adminPasswordHash = await bcrypt.hash(password, 10);
+    const adminName = email.split("@")[0] || "Administrator";
     await client.query(
       `
       insert into users (name, email, password_hash, is_active)
@@ -174,21 +194,52 @@ async function main() {
         is_active = true,
         updated_at = now()
     `,
-      [userName, email.toLowerCase(), passwordHash],
+      [adminName, email.toLowerCase(), adminPasswordHash],
     );
 
     const userRow = await client.query("select id from users where email = $1 limit 1", [email.toLowerCase()]);
-    const userId = userRow.rows[0]?.id;
+    const adminUserId = userRow.rows[0]?.id;
+    const userId = adminUserId;
     const adminRoleRow = await client.query("select id from roles where key = 'admin' limit 1");
     const adminRoleId = adminRoleRow.rows[0]?.id;
-    if (userId && adminRoleId) {
+    if (adminUserId && adminRoleId) {
       await client.query(
         `
         insert into user_roles (user_id, role_id)
         values ($1, $2)
         on conflict do nothing
       `,
-        [userId, adminRoleId],
+        [adminUserId, adminRoleId],
+      );
+    }
+
+    const qcPasswordHash = await bcrypt.hash(qcPassword, 10);
+    const qcName = "QC";
+    await client.query(
+      `
+      insert into users (name, email, password_hash, is_active)
+      values ($1, $2, $3, true)
+      on conflict (email) do update set
+        name = excluded.name,
+        password_hash = excluded.password_hash,
+        is_active = true,
+        updated_at = now()
+    `,
+      [qcName, qcEmail.toLowerCase(), qcPasswordHash],
+    );
+
+    const qcUserRow = await client.query("select id from users where email = $1 limit 1", [qcEmail.toLowerCase()]);
+    const qcUserId = qcUserRow.rows[0]?.id;
+    const qcRoleRow = await client.query("select id from roles where key = 'qc' limit 1");
+    const qcRoleId = qcRoleRow.rows[0]?.id;
+    if (qcUserId && qcRoleId) {
+      await client.query(
+        `
+        insert into user_roles (user_id, role_id)
+        values ($1, $2)
+        on conflict do nothing
+      `,
+        [qcUserId, qcRoleId],
       );
     }
 
@@ -246,8 +297,35 @@ async function main() {
       );
     }
 
+    const equipmentCategoriesSeed = [
+      { key: "audio-speaker", name: "Speaker", description: "Speaker pasif dan aktif.", sortOrder: 10 },
+      { key: "audio-processing", name: "Audio Processing", description: "DSP, DLMS, dan distributor audio.", sortOrder: 20 },
+      { key: "audio-cable", name: "Kabel & Konektor", description: "Snake cable dan konektor.", sortOrder: 30 },
+      { key: "audio-mixer", name: "Mixer", description: "Console dan mixer digital.", sortOrder: 40 },
+      { key: "audio-wireless", name: "Wireless", description: "Sistem wireless microphone.", sortOrder: 50 },
+      { key: "power", name: "Power", description: "UPS dan cadangan daya.", sortOrder: 60 },
+      { key: "audio", name: "Audio", description: "Peralatan suara dan mixing.", sortOrder: 70 },
+      { key: "video", name: "Video", description: "Peralatan kamera dan playback.", sortOrder: 80 },
+      { key: "lighting", name: "Lighting", description: "Peralatan pencahayaan.", sortOrder: 90 },
+    ];
+
+    for (const category of equipmentCategoriesSeed) {
+      await client.query(
+        `
+        insert into equipment_categories (key, name, description, sort_order)
+        values ($1, $2, $3, $4)
+        on conflict (key) do update set
+          name = excluded.name,
+          description = excluded.description,
+          sort_order = excluded.sort_order,
+          updated_at = now()
+      `,
+        [category.key, category.name, category.description, category.sortOrder],
+      );
+    }
+
     const categoryRows = await client.query(
-      "select id, key from equipment_categories where key in ('audio', 'video', 'lighting')",
+      "select id, key from equipment_categories where key in ('audio-speaker', 'audio-processing', 'audio-cable', 'audio-mixer', 'audio-wireless', 'power', 'audio', 'video', 'lighting')",
     );
     const categoryIdByKey = Object.fromEntries(
       categoryRows.rows.map((row) => [row.key, row.id]),
@@ -259,44 +337,247 @@ async function main() {
     const locationIdByCode = Object.fromEntries(locationRows.rows.map((row) => [row.code, row.id]));
 
     const equipmentSeed = [
+      ...Array.from({ length: 12 }, (_, index) => {
+        const number = String(index + 1).padStart(3, "0");
+        return {
+          code: `MSCOP${number}`,
+          name: 'Speaker Miniscoop 18"',
+          categoryKey: "audio-speaker",
+          locationCode: "WH-UTAMA-A",
+          brand: "Miniscoop",
+          model: '18"',
+          serialNumber: `MSCOP${number}`,
+          status: "ready",
+          conditionNote: "Siap dipakai.",
+          specificationNote: 'Speaker miniscoop 18".',
+          notes: "Aset unik speaker miniscoop.",
+        };
+      }),
+      ...Array.from({ length: 6 }, (_, index) => {
+        const number = String(index + 3).padStart(3, "0");
+        return {
+          code: `CLA${number}`,
+          name: 'Speaker CLA 18"',
+          categoryKey: "audio-speaker",
+          locationCode: "WH-UTAMA-A",
+          brand: "CLA",
+          model: '18"',
+          serialNumber: `CLA${number}`,
+          status: "ready",
+          conditionNote: "Siap dipakai.",
+          specificationNote: 'Speaker CLA 18".',
+          notes: "Aset unik speaker CLA.",
+        };
+      }),
+      ...Array.from({ length: 12 }, (_, index) => {
+        const number = String(index + 1).padStart(3, "0");
+        return {
+          code: `RX112-${number}`,
+          name: "Line Array Wisdom RX112",
+          categoryKey: "audio-speaker",
+          locationCode: "WH-UTAMA-A",
+          brand: "Wisdom",
+          model: "RX112",
+          serialNumber: `RX112-${number}`,
+          status: "ready",
+          conditionNote: "Siap dipakai.",
+          specificationNote: "Line array Wisdom RX112.",
+          notes: "Aset unik line array.",
+        };
+      }),
+      ...Array.from({ length: 4 }, (_, index) => {
+        const number = String(index + 1).padStart(3, "0");
+        return {
+          code: `CAF${number}`,
+          name: 'Speaker 2x15"',
+          categoryKey: "audio-speaker",
+          locationCode: "WH-UTAMA-A",
+          brand: "CAF",
+          model: '2x15"',
+          serialNumber: `CAF${number}`,
+          status: "ready",
+          conditionNote: "Siap dipakai.",
+          specificationNote: 'Speaker 2x15".',
+          notes: "Aset unik speaker 2x15.",
+        };
+      }),
+      ...Array.from({ length: 2 }, (_, index) => {
+        const number = String(index + 1).padStart(3, "0");
+        return {
+          code: `ALTO${number}`,
+          name: "Speaker Aktif Alto",
+          categoryKey: "audio-speaker",
+          locationCode: "WH-UTAMA-A",
+          brand: "Alto",
+          model: "Active Speaker",
+          serialNumber: `ALTO${number}`,
+          status: "ready",
+          conditionNote: "Siap dipakai.",
+          specificationNote: "Speaker aktif merk Alto.",
+          notes: "Aset unik speaker aktif Alto.",
+        };
+      }),
+      ...Array.from({ length: 6 }, (_, index) => {
+        const number = String(index + 1).padStart(3, "0");
+        return {
+          code: `B3${number}`,
+          name: "Speaker Aktif Beta3",
+          categoryKey: "audio-speaker",
+          locationCode: "WH-UTAMA-A",
+          brand: "Beta3",
+          model: "Active Speaker",
+          serialNumber: `B3${number}`,
+          status: "ready",
+          conditionNote: "Siap dipakai.",
+          specificationNote: "Speaker aktif merk Beta3.",
+          notes: "Aset unik speaker aktif Beta3.",
+        };
+      }),
+      ...Array.from({ length: 8 }, (_, index) => {
+        const number = String(index + 1).padStart(3, "0");
+        return {
+          code: `TRB${number}`,
+          name: 'Speaker Turbo 15"',
+          categoryKey: "audio-speaker",
+          locationCode: "WH-UTAMA-A",
+          brand: "Turbo",
+          model: '15"',
+          serialNumber: `TRB${number}`,
+          status: "ready",
+          conditionNote: "Siap dipakai.",
+          specificationNote: 'Speaker turbo 15".',
+          notes: "Aset unik speaker turbo.",
+        };
+      }),
       {
-        code: "EQ-AUD-001",
-        name: "Mixer Digital 12 Channel",
-        categoryKey: "audio",
+        code: "SNK001",
+        name: "Snake Cable",
+        categoryKey: "audio-cable",
         locationCode: "WH-UTAMA-A",
-        brand: "Soundcraft",
-        model: "Ui12",
-        serialNumber: "AUD-001-2026",
+        brand: "Generic",
+        model: "Snake Cable",
+        serialNumber: "SNK001",
         status: "ready",
         conditionNote: "Siap dipakai.",
-        specificationNote: "12 channel, wifi remote.",
-        notes: "Unit utama untuk setup FOH.",
+        specificationNote: "Snake cable audio.",
+        notes: "Aset unik snake cable.",
       },
       {
-        code: "EQ-VID-001",
-        name: "Kamera 4K",
-        categoryKey: "video",
-        locationCode: "SR-01",
-        brand: "Sony",
-        model: "A7S III",
-        serialNumber: "VID-001-2026",
-        status: "inspection_due",
-        conditionNote: "Perlu cek baterai dan sensor.",
-        specificationNote: "Mirrorless 4K, low light.",
-        notes: "Dipakai untuk dokumentasi event.",
+        code: "DX38001",
+        name: "DLMS Electrovoice DX38",
+        categoryKey: "audio-processing",
+        locationCode: "WH-UTAMA-A",
+        brand: "Electrovoice",
+        model: "DX38",
+        serialNumber: "DX38001",
+        status: "ready",
+        conditionNote: "Siap dipakai.",
+        specificationNote: "Digital loudspeaker management system.",
+        notes: "Aset unik DLMS DX38.",
       },
       {
-        code: "EQ-LGT-001",
-        name: "Lampu LED Panel",
-        categoryKey: "lighting",
-        locationCode: "WH-UTAMA",
-        brand: "Godox",
-        model: "SL60W",
-        serialNumber: "LGT-001-2026",
-        status: "maintenance",
-        conditionNote: "Kabel power perlu dicek.",
-        specificationNote: "Daylight LED, output stabil.",
-        notes: "Satu unit sedang masuk perawatan.",
+        code: "DX38002",
+        name: "DLMS Electrovoice DX38",
+        categoryKey: "audio-processing",
+        locationCode: "WH-UTAMA-A",
+        brand: "Electrovoice",
+        model: "DX38",
+        serialNumber: "DX38002",
+        status: "ready",
+        conditionNote: "Siap dipakai.",
+        specificationNote: "Digital loudspeaker management system.",
+        notes: "Aset unik DLMS DX38.",
+      },
+      {
+        code: "SYMP001",
+        name: "DLMS Phaselab Symphonie",
+        categoryKey: "audio-processing",
+        locationCode: "WH-UTAMA-A",
+        brand: "Phaselab",
+        model: "Symphonie",
+        serialNumber: "SYMP001",
+        status: "ready",
+        conditionNote: "Siap dipakai.",
+        specificationNote: "Digital loudspeaker management system.",
+        notes: "Aset unik DLMS Symphonie.",
+      },
+      {
+        code: "ULTRLNK01",
+        name: "Distributor Audio Behringer Ultralink",
+        categoryKey: "audio-processing",
+        locationCode: "WH-UTAMA-A",
+        brand: "Behringer",
+        model: "Ultralink",
+        serialNumber: "ULTRLNK01",
+        status: "ready",
+        conditionNote: "Siap dipakai.",
+        specificationNote: "Audio distributor / splitter.",
+        notes: "Aset unik distributor audio.",
+      },
+      {
+        code: "APC001",
+        name: "UPS",
+        categoryKey: "power",
+        locationCode: "WH-UTAMA-A",
+        brand: "APC",
+        model: "UPS",
+        serialNumber: "APC001",
+        status: "ready",
+        conditionNote: "Siap dipakai.",
+        specificationNote: "Uninterruptible power supply.",
+        notes: "Aset unik UPS.",
+      },
+      {
+        code: "APC002",
+        name: "UPS",
+        categoryKey: "power",
+        locationCode: "WH-UTAMA-A",
+        brand: "APC",
+        model: "UPS",
+        serialNumber: "APC002",
+        status: "ready",
+        conditionNote: "Siap dipakai.",
+        specificationNote: "Uninterruptible power supply.",
+        notes: "Aset unik UPS.",
+      },
+      {
+        code: "M32L001",
+        name: "Mixer Midas M32 Live",
+        categoryKey: "audio-mixer",
+        locationCode: "WH-UTAMA-A",
+        brand: "Midas",
+        model: "M32 Live",
+        serialNumber: "M32L001",
+        status: "ready",
+        conditionNote: "Siap dipakai.",
+        specificationNote: "Mixer digital Midas M32 Live.",
+        notes: "Aset unik mixer utama.",
+      },
+      {
+        code: "WRLS001",
+        name: "Mix Wireless Wisdom Q11",
+        categoryKey: "audio-wireless",
+        locationCode: "WH-UTAMA-A",
+        brand: "Wisdom",
+        model: "Q11",
+        serialNumber: "WRLS001",
+        status: "ready",
+        conditionNote: "Siap dipakai.",
+        specificationNote: "Wireless microphone set.",
+        notes: "Aset unik wireless.",
+      },
+      {
+        code: "WRLS002",
+        name: "Mix Wireless Wisdom Q11",
+        categoryKey: "audio-wireless",
+        locationCode: "WH-UTAMA-A",
+        brand: "Wisdom",
+        model: "Q11",
+        serialNumber: "WRLS002",
+        status: "ready",
+        conditionNote: "Siap dipakai.",
+        specificationNote: "Wireless microphone set.",
+        notes: "Aset unik wireless.",
       },
     ];
 
@@ -715,6 +996,98 @@ async function main() {
         userId,
       ],
     );
+
+    const qcEventNumber = "EV-QC-ALL";
+    const qcEventName = "QC Case - Semua Peralatan";
+    const qcEventClient = "QC Internal";
+    const qcEventVenue = "Gudang Utama";
+    const qcEventStart = new Date();
+    qcEventStart.setDate(qcEventStart.getDate() + 1);
+    qcEventStart.setHours(9, 0, 0, 0);
+    const qcEventEnd = new Date(qcEventStart);
+    qcEventEnd.setDate(qcEventEnd.getDate() + 1);
+    qcEventEnd.setHours(18, 0, 0, 0);
+
+    const qcEventRow = await client.query(
+      `
+      insert into events (
+        event_number,
+        name,
+        client_name,
+        venue_name,
+        status,
+        start_at,
+        end_at,
+        notes,
+        created_by_user_id,
+        metadata,
+        updated_at
+      )
+      values ($1, $2, $3, $4, 'booked', $5, $6, $7, $8, $9::jsonb, now())
+      on conflict (event_number) do update set
+        name = excluded.name,
+        client_name = excluded.client_name,
+        venue_name = excluded.venue_name,
+        status = excluded.status,
+        start_at = excluded.start_at,
+        end_at = excluded.end_at,
+        notes = excluded.notes,
+        created_by_user_id = excluded.created_by_user_id,
+        metadata = excluded.metadata,
+        updated_at = now()
+      returning id
+    `,
+      [
+        qcEventNumber,
+        qcEventName,
+        qcEventClient,
+        qcEventVenue,
+        qcEventStart,
+        qcEventEnd,
+        "Case uji operasional yang membooking semua equipment aktif sebagai baseline QC.",
+        adminUserId,
+        JSON.stringify({
+          purpose: "qc_all_equipment_case",
+          seededBy: "seed-phase1",
+        }),
+      ],
+    );
+
+    const qcEventId = qcEventRow.rows[0]?.id;
+    if (qcEventId) {
+      await client.query("delete from event_checklist_items where checklist_id in (select id from event_checklists where event_id = $1)", [qcEventId]);
+      await client.query("delete from event_checklists where event_id = $1", [qcEventId]);
+      await client.query("delete from event_equipment where event_id = $1", [qcEventId]);
+
+      const allEquipmentRows = await client.query("select id, code from equipment order by code");
+      for (const equipmentRow of allEquipmentRows.rows) {
+        await client.query(
+          `
+          insert into event_equipment (
+            event_id,
+            equipment_id,
+            booking_status,
+            packing_status,
+            loading_status,
+            return_status,
+            note,
+            metadata,
+            updated_at
+          )
+          values ($1, $2, 'reserved', 'pending', 'pending', 'pending', $3, '{}'::jsonb, now())
+          on conflict (event_id, equipment_id) do update set
+            booking_status = excluded.booking_status,
+            packing_status = excluded.packing_status,
+            loading_status = excluded.loading_status,
+            return_status = excluded.return_status,
+            note = excluded.note,
+            metadata = excluded.metadata,
+            updated_at = now()
+        `,
+          [qcEventId, equipmentRow.id, `Seed case semua equipment - ${equipmentRow.code}`],
+        );
+      }
+    }
 
     await client.query("COMMIT");
     console.log(`Seed fase 1 selesai. Akun admin: ${email.toLowerCase()}`);

@@ -43,6 +43,34 @@
       "when": 1781232759520,
       "tag": "0005_vengeful_wiccan",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1781314811800,
+      "tag": "0006_optimal_radioactive_man",
+      "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "7",
+      "when": 1781319076295,
+      "tag": "0007_early_owl",
+      "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "7",
+      "when": 1781326184915,
+      "tag": "0008_known_microchip",
+      "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "7",
+      "when": 1781330514793,
+      "tag": "0009_lean_ultimatum",
+      "breakpoints": true
     }
   ]
 }

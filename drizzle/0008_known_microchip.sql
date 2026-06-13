@@ -1,0 +1,1 @@
+CREATE UNIQUE INDEX "event_equipment_event_equipment_unique" ON "event_equipment" USING btree ("event_id","equipment_id");
