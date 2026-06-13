@@ -29,6 +29,10 @@ const equipmentStatuses = EQUIPMENT_STATUS_OPTIONS.map((item) => item.value) as 
 ];
 
 const emptyToUndefined = (value: unknown) => {
+  if (value === null || value === undefined) {
+    return undefined;
+  }
+
   if (typeof value !== "string") {
     return value;
   }
@@ -86,7 +90,7 @@ const equipmentDocumentSchema = z.object({
 const inspectionExecutionSchema = z.object({
   equipmentId: z.string().uuid(),
   templateId: optionalUuid,
-  resultStatus: z.enum(["pass", "warning", "fail"]).optional(),
+  resultStatus: z.preprocess(emptyToUndefined, z.enum(["pass", "warning", "fail"]).optional()),
   note: optionalText,
   nextInspectionAt: optionalDate,
   redirectTo: z.string().trim().optional(),
@@ -111,6 +115,19 @@ async function requireEquipmentWriteAccess() {
   }
 
   return session;
+}
+
+async function requireEquipmentInspectionAccess() {
+  const session = await getCurrentAuthSession();
+  if (!session) {
+    redirect("/login");
+  }
+
+  if (hasPermission(session, "inspections.write") || hasPermission(session, "equipment.write")) {
+    return session;
+  }
+
+  redirect("/akses-ditolak");
 }
 
 function safeReturnPath(path?: string) {
@@ -547,7 +564,7 @@ export async function performEquipmentInspectionAction(
   _state: EquipmentActionState,
   formData: FormData,
 ): Promise<EquipmentActionState> {
-  const session = await requireEquipmentWriteAccess();
+  const session = await requireEquipmentInspectionAccess();
   const parsed = inspectionExecutionSchema.safeParse({
     equipmentId: formData.get("equipmentId"),
     templateId: formData.get("templateId"),
@@ -714,5 +731,12 @@ export async function performEquipmentInspectionAction(
   revalidatePath("/dashboard");
   revalidatePath("/equipment");
   revalidatePath(`/equipment/${equipmentRow.id}`);
-  redirect(safeReturnPath(parsed.data.redirectTo ?? `/equipment/${equipmentRow.id}?tab=inspeksi`));
+  const defaultRedirect = hasPermission(session, "equipment.read")
+    ? `/equipment/${equipmentRow.id}?tab=inspeksi`
+    : "/dashboard";
+  const redirectTarget =
+    parsed.data.redirectTo && hasPermission(session, "equipment.read")
+      ? parsed.data.redirectTo
+      : defaultRedirect;
+  redirect(safeReturnPath(redirectTarget));
 }

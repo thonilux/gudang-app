@@ -76,6 +76,7 @@ const roles = [
       "dashboard.view",
       "audit.read",
       "equipment.read",
+      "inspections.write",
       "warehouse.read",
       "warehouse.write",
       "events.read",

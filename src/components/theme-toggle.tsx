@@ -27,9 +27,11 @@ function applyTheme(theme: Theme) {
 }
 
 export function ThemeToggle() {
+  const [mounted, setMounted] = useState(false);
   const [theme, setTheme] = useState<Theme>("light");
 
   useEffect(() => {
+    setMounted(true);
     const initialTheme = getPreferredTheme();
     setTheme(initialTheme);
     applyTheme(initialTheme);
@@ -44,6 +46,7 @@ export function ThemeToggle() {
   };
 
   const activeLabel = theme === "dark" ? "Mode gelap" : "Mode terang";
+  const iconClassName = "h-4 w-4";
 
   return (
     <button
@@ -53,7 +56,11 @@ export function ThemeToggle() {
       aria-label={activeLabel}
       title={activeLabel}
     >
-      {theme === "dark" ? <SunMedium className="h-4 w-4" /> : <MoonStar className="h-4 w-4" />}
+      {mounted ? (
+        theme === "dark" ? <SunMedium className={iconClassName} /> : <MoonStar className={iconClassName} />
+      ) : (
+        <span className="h-4 w-4" aria-hidden="true" />
+      )}
     </button>
   );
 }
