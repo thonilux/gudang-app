@@ -19,6 +19,10 @@ import {
   getInspectionStatusTone,
 } from "@/lib/inspection";
 import { hasPermission } from "@/lib/rbac";
+import { desc, eq } from "drizzle-orm";
+import { getDb } from "@/db";
+import { equipmentMeasurements } from "@/db/schema";
+import { MeasurementTab } from "./measurement-tab";
 
 import {
   archiveEquipmentAction,
@@ -59,7 +63,7 @@ export default async function EquipmentDetailPage({
 
   const tabRaw = resolvedSearchParams.tab;
   const activeTab = typeof tabRaw === "string" ? tabRaw : "ikhtisar";
-  const tab = ["ikhtisar", "ubah", "status", "lokasi", "dokumen", "inspeksi"].includes(activeTab)
+  const tab = ["ikhtisar", "ubah", "status", "lokasi", "dokumen", "inspeksi", "pengukuran"].includes(activeTab)
     ? activeTab
     : "ikhtisar";
 
@@ -70,11 +74,32 @@ export default async function EquipmentDetailPage({
     { key: "lokasi", label: "Lokasi" },
     { key: "dokumen", label: "Dokumen" },
     { key: "inspeksi", label: "Inspeksi" },
+    { key: "pengukuran", label: "Pengukuran" },
   ];
+
+  const db = getDb();
 
   const inspectionTemplates =
     tab === "inspeksi" ? await getInspectionTemplatesForCategory(detail.item.categoryId) : [];
   const inspectionHistory = tab === "inspeksi" ? await getEquipmentInspectionHistory(detail.item.id) : [];
+
+  const rawMeasurements = tab === "pengukuran"
+    ? await db
+        .select()
+        .from(equipmentMeasurements)
+        .where(eq(equipmentMeasurements.equipmentId, detail.item.id))
+        .orderBy(desc(equipmentMeasurements.measurementDate))
+    : [];
+
+  const measurements = rawMeasurements.map((m) => ({
+    ...m,
+    parsedJson: m.parsedJson as {
+      frequency: number[];
+      magnitude: number[];
+      phase: (number | null)[];
+      coherence: (number | null)[];
+    } | null,
+  }));
 
   return (
     <div className="space-y-6">
@@ -505,6 +530,12 @@ export default async function EquipmentDetailPage({
               )}
             </div>
           </article>
+        </section>
+      ) : null}
+
+      {tab === "pengukuran" ? (
+        <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-soft">
+          <MeasurementTab equipmentId={detail.item.id} measurements={measurements} />
         </section>
       ) : null}
     </div>

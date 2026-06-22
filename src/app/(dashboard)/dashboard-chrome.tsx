@@ -18,6 +18,7 @@ import {
   Wrench,
   Warehouse,
   X,
+  BarChart3,
 } from "lucide-react";
 
 import { ThemeToggle } from "@/components/theme-toggle";
@@ -45,6 +46,7 @@ const MENU: DashboardMenuItem[] = [
   { href: "/events", label: "Events", icon: CalendarDays },
   { href: "/warehouse", label: "Warehouse", icon: Warehouse },
   { href: "/equipment", label: "Peralatan", icon: Package2 },
+  { href: "/measurements", label: "Pengukuran", icon: BarChart3 },
   { href: "/bhp", label: "BHP", icon: Package2 },
   { href: "/maintenance", label: "Maintenance", icon: Wrench },
   { href: "/audit", label: "Audit", icon: ShieldCheck },

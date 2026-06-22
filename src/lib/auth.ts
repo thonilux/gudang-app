@@ -106,7 +106,13 @@ export async function revokeSession() {
     .update(sessions)
     .set({ revokedAt: new Date() })
     .where(eq(sessions.tokenHash, tokenHash));
-  cookieStore.delete(AUTH_SESSION_COOKIE);
+  
+  try {
+    cookieStore.delete(AUTH_SESSION_COOKIE);
+  } catch {
+    // Cookies cannot be modified during Server Component rendering phase.
+    // This is safe to ignore as the session is already revoked in the database.
+  }
 }
 
 export async function signInWithCredentials(email: string, password: string) {
@@ -189,7 +195,6 @@ export async function getCurrentAuthSession(): Promise<AuthContext | null> {
   });
 
   if (!session) {
-    await revokeSession();
     return null;
   }
 
@@ -198,7 +203,6 @@ export async function getCurrentAuthSession(): Promise<AuthContext | null> {
   });
 
   if (!user) {
-    await revokeSession();
     return null;
   }
 

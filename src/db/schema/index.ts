@@ -4,3 +4,4 @@ export * from "./equipment";
 export * from "./maintenance";
 export * from "./inspection";
 export * from "./warehouse";
+export * from "./measurements";

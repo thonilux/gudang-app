@@ -116,6 +116,18 @@ export default async function AdminPage() {
               </div>
               <Layers3 className="h-5 w-5 text-accent" />
             </Link>
+            <Link
+              href="/admin/users"
+              className="flex items-center justify-between rounded-2xl border border-border bg-panelAlt px-4 py-3 transition hover:bg-panel"
+            >
+              <div>
+                <p className="text-sm font-medium text-text">Manajemen pengguna</p>
+                <p className="mt-1 text-xs text-muted">
+                  Kelola akun, kata sandi, peran, dan hak akses pengguna.
+                </p>
+              </div>
+              <Users2 className="h-5 w-5 text-accent" />
+            </Link>
           </div>
         </article>
 

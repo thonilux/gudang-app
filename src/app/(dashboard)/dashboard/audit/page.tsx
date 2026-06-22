@@ -1,6 +1,7 @@
 import { redirect } from "next/navigation";
 
 import { getDb } from "@/db";
+import { users } from "@/db/schema";
 import { getCurrentAuthSession } from "@/lib/auth";
 import { hasPermission } from "@/lib/rbac";
 
@@ -17,10 +18,29 @@ export default async function AuditPage() {
   }
 
   const db = getDb();
-  const logs = await db.query.auditLogs.findMany({
-    orderBy: (table, { desc }) => [desc(table.createdAt)],
-    limit: 20,
-  });
+  const [logs, allUsers] = await Promise.all([
+    db.query.auditLogs.findMany({
+      orderBy: (table, { desc }) => [desc(table.createdAt)],
+      limit: 20,
+    }),
+    db
+      .select({
+        id: users.id,
+        name: users.name,
+      })
+      .from(users),
+  ]);
+
+  const userNameMap = new Map(allUsers.map((u) => [u.id, u.name]));
+
+  const getEntityLabel = (log: typeof logs[number]) => {
+    if (!log.entityType) return "-";
+    if (log.entityType === "user" && log.entityId) {
+      const name = userNameMap.get(log.entityId);
+      if (name) return `user: ${name}`;
+    }
+    return `${log.entityType}${log.entityId ? ` #${log.entityId}` : ""}`;
+  };
 
   return (
     <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-soft">
@@ -56,7 +76,7 @@ export default async function AuditPage() {
                   <td className="px-4 py-3 font-medium text-slate-900">{log.action}</td>
                   <td className="px-4 py-3 text-slate-600">{log.summary}</td>
                   <td className="px-4 py-3 text-slate-600">
-                    {log.entityType ? `${log.entityType}${log.entityId ? ` #${log.entityId}` : ""}` : "-"}
+                    {getEntityLabel(log)}
                   </td>
                 </tr>
               ))
