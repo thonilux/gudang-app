@@ -48,6 +48,12 @@ Mengadaptasi desain perangkat lunak penganalisis akustik profesional asli ke dal
   - Fitur perbandingan (*overlay traces*): Pengguna dapat memilih grafik pengukuran aset lain sebagai pembanding. Grafik pembanding (garis kuning/emas/oranye) akan ditumpuk di atas grafik aktif sehingga teknisi dapat membandingkan penurunan respon frekuensi secara instan.
   - Hover ganda (Dual Readout): Menampilkan data pembacaan numerik untuk kedua grafik (aktif dan pembanding) secara bersamaan saat kursor diarahkan ke grafik.
 
+### 📷 Fase 9: Integrasi Kamera Pemindai QR Code Seluler
+Meningkatkan efisiensi kerja tim lapangan dengan pemindaian nirkabel di gudang:
+- **Web Camera QR Reader**: Membangun komponen scanner yang mengaktifkan kamera belakang HP secara aman langsung dari browser menggunakan library `html5-qrcode` yang teroptimasi.
+- **Formulir Interaktif**: Menyisipkan tombol pemicu pemindaian QR di samping input teks kode peralatan pada halaman operasional event (Checklist Loading & Return).
+- **Alur Kerja Otomatis (Auto-Submit)**: Begitu barcode / QR code pada stiker fisik speaker terpindai, sistem otomatis mengisi kolom, menutup kamera, dan langsung memproses transaksi secara real-time, mempercepat persiapan peralatan secara signifikan.
+
 ---
 
 ## 📈 Status Verifikasi Akhir

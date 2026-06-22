@@ -1,7 +1,8 @@
 "use client";
 
-import { useActionState } from "react";
-import { Loader2 } from "lucide-react";
+import { useActionState, useState, useRef } from "react";
+import { Loader2, QrCode } from "lucide-react";
+import { QRScanner } from "./qr-scanner";
 
 import {
   generateEventChecklistsAction,
@@ -45,22 +46,58 @@ export function EventWorkflowScanForm({
   mode: "loading" | "return";
 }) {
   const [state, formAction, pending] = useActionState(recordEventWorkflowScanAction, {} as EventWorkflowActionState);
+  const [equipmentCode, setEquipmentCode] = useState("");
+  const [showScanner, setShowScanner] = useState(false);
+  const formRef = useRef<HTMLFormElement>(null);
+
+  const handleScanSuccess = (code: string) => {
+    setEquipmentCode(code);
+    setShowScanner(false);
+    
+    // Auto-submit form after a short delay so user sees the scanned value
+    setTimeout(() => {
+      if (formRef.current) {
+        formRef.current.requestSubmit();
+      }
+    }, 400);
+  };
 
   return (
-    <form action={formAction} className="space-y-4">
+    <form ref={formRef} action={formAction} className="space-y-4">
       <input type="hidden" name="eventId" value={eventId} />
       <input type="hidden" name="mode" value={mode} />
       <input type="hidden" name="redirectTo" value={redirectTo} />
 
-      <label className="block space-y-2">
-        <span className="text-sm font-medium text-slate-700">Kode equipment</span>
-        <input
-          name="equipmentCode"
-          className="w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm outline-none transition focus:border-blue-600"
-          placeholder="Scan QR atau ketik kode equipment"
-          required
+      <div className="space-y-2">
+        <span className="text-sm font-medium text-slate-700 block">Kode equipment</span>
+        <div className="flex gap-2">
+          <div className="relative flex-1">
+            <input
+              name="equipmentCode"
+              value={equipmentCode}
+              onChange={(e) => setEquipmentCode(e.target.value)}
+              className="w-full rounded-xl border border-slate-300 bg-white pl-4 pr-10 py-3 text-sm outline-none transition focus:border-blue-600"
+              placeholder="Scan QR atau ketik kode equipment"
+              required
+            />
+          </div>
+          <button
+            type="button"
+            onClick={() => setShowScanner(true)}
+            className="inline-flex items-center justify-center rounded-xl border border-slate-300 bg-slate-50 px-3.5 text-slate-600 transition hover:bg-slate-100"
+            title="Pindai dengan Kamera"
+          >
+            <QrCode className="h-5 w-5" />
+          </button>
+        </div>
+      </div>
+
+      {showScanner && (
+        <QRScanner
+          onScanSuccess={handleScanSuccess}
+          onClose={() => setShowScanner(false)}
         />
-      </label>
+      )}
 
       {mode === "return" ? (
         <label className="block space-y-2">
