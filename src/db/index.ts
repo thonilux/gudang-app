@@ -13,6 +13,7 @@ export function getDb() {
   if (!cachedPool) {
     cachedPool = new Pool({
       connectionString: getRequiredEnv("DATABASE_URL"),
+      ssl: process.env.NODE_ENV === "production" ? { rejectUnauthorized: false } : undefined,
     });
   }
 
