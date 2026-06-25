@@ -47,7 +47,7 @@ export default async function AuditPage() {
       <p className="text-sm font-medium uppercase tracking-[0.2em] text-teal-700">Audit</p>
       <h1 className="mt-2 text-2xl font-semibold tracking-tight">Log audit terbaru</h1>
       <p className="mt-2 text-sm text-slate-600">
-        Setiap aksi sensitif yang lewat fase 1 tercatat di sini.
+        Setiap aksi penting dan riwayat perubahan data tercatat di sini untuk transparansi operasional.
       </p>
 
       <div className="mt-6 overflow-x-auto rounded-2xl border border-slate-200">

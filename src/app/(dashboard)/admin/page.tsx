@@ -24,31 +24,25 @@ export default async function AdminPage() {
     {
       label: "Kategori peralatan",
       value: referenceData.categories.length.toString(),
-      note: "Daftar kategori yang dipakai di form peralatan.",
+      note: "Kategori yang terdaftar untuk klasifikasi inventaris.",
       icon: Tags,
     },
     {
       label: "Template inspeksi",
-      value: "Siap",
-      note: "Checklist per kategori untuk fase inspeksi.",
+      value: "Aktif",
+      note: "Checklist evaluasi kelayakan aset per kategori.",
       icon: Layers3,
     },
     {
-      label: "Panel admin",
-      value: "Siap",
-      note: "Scaffold untuk pengelolaan data khusus admin.",
+      label: "Manajemen user",
+      value: "Aktif",
+      note: "Pengaturan akun, perizinan, dan hak akses staf.",
       icon: Settings2,
     },
     {
-      label: "Arah pengembangan",
-      value: "CRUD",
-      note: "Tambah, ubah, nonaktifkan, dan atur urutan kategori.",
-      icon: Layers3,
-    },
-    {
-      label: "Akun aktif",
-      value: session.roles.length.toString(),
-      note: "Peran yang dimiliki user saat ini.",
+      label: "Peran Anda",
+      value: String(session.roles[0] ?? "-"),
+      note: "Hak akses administratif yang Anda miliki saat ini.",
       icon: Users2,
     },
   ];
@@ -59,8 +53,7 @@ export default async function AdminPage() {
         <p className="text-sm font-medium uppercase tracking-[0.2em] text-blue-600">Admin</p>
         <h1 className="mt-2 text-3xl font-semibold tracking-tight">Panel admin</h1>
         <p className="mt-2 max-w-2xl text-sm leading-6 text-muted">
-          Ini scaffolding untuk area admin. Fokus pertama kita adalah kategori peralatan yang
-          spesifik agar form peralatan bisa dikelola tanpa hardcode.
+          Panel administrasi untuk mengelola kategori peralatan, template checklist inspeksi, dan perizinan akses akun operasional.
         </p>
       </section>
 
@@ -84,11 +77,11 @@ export default async function AdminPage() {
         })}
       </section>
 
-      <section className="grid gap-6 lg:grid-cols-[1.05fr_0.95fr]">
+      <section className="grid gap-6">
         <article className="rounded-2xl border border-border bg-panel p-6 shadow-soft">
           <h2 className="text-lg font-semibold text-text">Shortcut admin</h2>
           <p className="mt-1 text-sm text-muted">
-            Gunakan panel ini sebagai titik masuk ke modul-modul admin berikutnya.
+            Gunakan panel ini sebagai titik masuk ke modul-modul administratif sistem.
           </p>
 
           <div className="mt-5 space-y-3">
@@ -130,24 +123,6 @@ export default async function AdminPage() {
             </Link>
           </div>
         </article>
-
-        <aside className="rounded-2xl border border-border bg-panel p-6 shadow-soft">
-          <h2 className="text-lg font-semibold text-text">Rencana modul</h2>
-          <div className="mt-4 space-y-3 text-sm text-muted">
-            <div className="rounded-2xl border border-border bg-panelAlt p-4">
-              <p className="font-medium text-text">Kategori peralatan</p>
-              <p className="mt-1">CRUD penuh untuk kategori yang dipakai di inventaris peralatan.</p>
-            </div>
-            <div className="rounded-2xl border border-border bg-panelAlt p-4">
-              <p className="font-medium text-text">Role dan permission</p>
-              <p className="mt-1">Panel lanjutan untuk akses, role, dan izin admin.</p>
-            </div>
-            <div className="rounded-2xl border border-border bg-panelAlt p-4">
-              <p className="font-medium text-text">Konfigurasi sistem</p>
-              <p className="mt-1">Pengaturan label, struktur, dan opsi default aplikasi.</p>
-            </div>
-          </div>
-        </aside>
       </section>
     </div>
   );

@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
-import { ArrowRight, ClipboardCheck, Eye, LayoutGrid, MapPin, Search, ShieldAlert, ShieldCheck, Wrench, PencilLine } from "lucide-react";
+import { ClipboardCheck, Eye, LayoutGrid, MapPin, Search, ShieldAlert, ShieldCheck, Wrench, PencilLine } from "lucide-react";
 
 import { ActionModal } from "@/components/action-modal";
 import { getCurrentAuthSession } from "@/lib/auth";
@@ -407,23 +407,6 @@ export default async function EquipmentPage({
               )}
             </div>
           </>
-      </section>
-
-      <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-soft">
-        <div className="flex items-center justify-between gap-3">
-          <div>
-            <h2 className="text-lg font-semibold">Catatan fase 2</h2>
-            <p className="mt-1 text-sm text-slate-500">
-              Fokus fase ini adalah aset inti: status, lokasi, riwayat dasar, foto, dan dokumen pendukung.
-            </p>
-          </div>
-          <Link prefetch={false}
-            href="/dashboard"
-            className="inline-flex items-center gap-2 font-medium text-teal-800 transition hover:text-teal-950"
-          >
-            Lihat dasbor <ArrowRight className="h-4 w-4" />
-          </Link>
-        </div>
       </section>
     </div>
   );

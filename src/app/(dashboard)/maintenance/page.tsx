@@ -267,8 +267,7 @@ export default async function MaintenancePage({
         <p className="text-sm font-medium uppercase tracking-[0.2em] text-blue-600">Maintenance</p>
         <h1 className="mt-2 text-3xl font-semibold tracking-tight">Ticket servis dan perbaikan</h1>
         <p className="mt-2 max-w-2xl text-sm leading-6 text-slate-600">
-          Semua complaint, diagnosis, tindakan, spare part, vendor, dan penutupan ticket dicatat
-          di sini. Fase ini berdiri di atas peralatan, bukan menggantikannya.
+          Semua complaint, diagnosis, tindakan, spare part, vendor, dan penutupan ticket dicatat di sini.
         </p>
       </section>
 
