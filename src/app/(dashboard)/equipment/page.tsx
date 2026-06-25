@@ -171,7 +171,7 @@ export default async function EquipmentPage({
             Cari
           </button>
           {searchQuery ? (
-            <Link
+            <Link prefetch={false}
               href="/equipment"
               className="inline-flex items-center justify-center rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm font-semibold text-slate-700 transition hover:bg-slate-50"
             >
@@ -203,7 +203,7 @@ export default async function EquipmentPage({
                     <tr key={item.id}>
                       <td className="px-4 py-3 font-medium text-slate-900">{item.code}</td>
                       <td className="px-4 py-3 text-slate-700">
-                        <Link
+                        <Link prefetch={false}
                           href={`/equipment/${item.id}?tab=ikhtisar`}
                           className="font-medium text-slate-900 transition hover:text-teal-700"
                         >
@@ -260,7 +260,7 @@ export default async function EquipmentPage({
                               }}
                             />
                           </ActionModal>
-                          <Link
+                          <Link prefetch={false}
                             href={`/equipment/${item.id}?tab=inspeksi`}
                             className="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-slate-300 bg-white text-slate-700 transition hover:bg-slate-50"
                             aria-label="Inspeksi"
@@ -269,7 +269,7 @@ export default async function EquipmentPage({
                             <ClipboardCheck className="h-4 w-4" />
                             <span className="sr-only">Inspeksi</span>
                           </Link>
-                          <Link
+                          <Link prefetch={false}
                             href={`/equipment/${item.id}?tab=ikhtisar`}
                             className="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-slate-300 bg-white text-slate-700 transition hover:bg-slate-50"
                             aria-label="Detail"
@@ -296,7 +296,7 @@ export default async function EquipmentPage({
               Fokus fase ini adalah aset inti: status, lokasi, riwayat dasar, foto, dan dokumen pendukung.
             </p>
           </div>
-          <Link
+          <Link prefetch={false}
             href="/dashboard"
             className="inline-flex items-center gap-2 font-medium text-teal-800 transition hover:text-teal-950"
           >

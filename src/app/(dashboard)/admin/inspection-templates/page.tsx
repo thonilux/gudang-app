@@ -115,7 +115,7 @@ export default async function InspectionTemplatesAdminPage({
                         </span>
                       </td>
                       <td className="px-4 py-3">
-                        <Link
+                        <Link prefetch={false}
                           href={`/admin/inspection-templates?edit=${template.id}`}
                           aria-label="Ubah template"
                           title="Ubah template"

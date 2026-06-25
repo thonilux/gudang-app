@@ -106,7 +106,7 @@ export default async function EquipmentDetailPage({
       <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-soft">
         <div className="flex flex-wrap items-center justify-between gap-4">
           <div>
-            <Link
+            <Link prefetch={false}
               href="/equipment"
               className="inline-flex items-center gap-2 text-sm font-medium text-slate-600 transition hover:text-slate-900"
             >
@@ -148,7 +148,7 @@ export default async function EquipmentDetailPage({
 
       <nav className="flex flex-wrap gap-2">
         {tabItems.map((item) => (
-          <Link
+          <Link prefetch={false}
             key={item.key}
             href={`/equipment/${detail.item.id}?tab=${item.key}`}
             className={`rounded-xl border px-4 py-2 text-sm font-medium transition ${
@@ -247,20 +247,20 @@ export default async function EquipmentDetailPage({
             <div className="mt-6 rounded-2xl border border-teal-100 bg-teal-50 p-4">
               <p className="text-sm font-medium text-teal-900">Aksi cepat</p>
               <div className="mt-3 flex flex-wrap gap-2">
-                <Link
+                <Link prefetch={false}
                   href={`/equipment/${detail.item.id}?tab=ubah`}
                   className="inline-flex items-center gap-2 rounded-xl bg-white px-3 py-2 text-sm font-medium text-teal-800 transition hover:bg-teal-100"
                 >
                   <PencilLine className="h-4 w-4" />
                   Ubah data
                 </Link>
-                <Link
+                <Link prefetch={false}
                   href={`/equipment/${detail.item.id}?tab=status`}
                   className="inline-flex items-center gap-2 rounded-xl bg-white px-3 py-2 text-sm font-medium text-teal-800 transition hover:bg-teal-100"
                 >
                   Ubah status
                 </Link>
-                <Link
+                <Link prefetch={false}
                   href={`/equipment/${detail.item.id}?tab=inspeksi`}
                   className="inline-flex items-center gap-2 rounded-xl bg-white px-3 py-2 text-sm font-medium text-teal-800 transition hover:bg-teal-100"
                 >

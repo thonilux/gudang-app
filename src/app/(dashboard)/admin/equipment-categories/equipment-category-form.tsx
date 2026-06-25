@@ -125,7 +125,7 @@ export function EquipmentCategoryForm({
         </button>
 
         {mode === "edit" ? (
-          <Link
+          <Link prefetch={false}
             href="/admin/equipment-categories"
             className="inline-flex items-center justify-center rounded-xl border border-border bg-panel px-4 py-3 text-sm font-semibold text-text transition hover:bg-panelAlt"
           >

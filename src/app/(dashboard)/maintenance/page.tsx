@@ -333,7 +333,7 @@ export default async function MaintenancePage({
               Cari
             </button>
             {searchQuery ? (
-              <Link
+              <Link prefetch={false}
                 href="/maintenance"
                 className="inline-flex items-center justify-center rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm font-semibold text-slate-700 transition hover:bg-slate-50"
               >
@@ -366,7 +366,7 @@ export default async function MaintenancePage({
                     return (
                       <tr key={ticket.id} className={isActive ? "bg-blue-50/50" : ""}>
                         <td className="px-4 py-3">
-                          <Link
+                          <Link prefetch={false}
                             href={`/maintenance?ticket=${ticket.id}`}
                             className="font-medium text-slate-900 transition hover:text-blue-700"
                           >
@@ -375,7 +375,7 @@ export default async function MaintenancePage({
                           <p className="mt-1 text-xs text-slate-500">{ticket.subject}</p>
                         </td>
                         <td className="px-4 py-3 text-slate-700">
-                          <Link
+                          <Link prefetch={false}
                             href={`/maintenance?ticket=${ticket.id}`}
                             className="font-medium text-slate-900 transition hover:text-blue-700"
                           >

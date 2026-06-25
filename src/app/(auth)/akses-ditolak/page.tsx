@@ -15,7 +15,7 @@ export default function AccessDeniedPage() {
           untuk akun Anda.
         </p>
         <div className="mt-6">
-          <Link
+          <Link prefetch={false}
             href="/dashboard"
             className="inline-flex items-center rounded-xl bg-teal-600 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-teal-700"
           >

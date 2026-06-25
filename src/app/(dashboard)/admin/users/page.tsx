@@ -135,7 +135,7 @@ export default async function UsersAdminPage({ searchParams }: PageProps) {
         <article className="rounded-2xl border border-border bg-panel p-6 shadow-soft space-y-4">
           <div className="flex items-center justify-between">
             <h2 className="text-lg font-semibold text-text">Daftar Pengguna</h2>
-            <Link
+            <Link prefetch={false}
               href="/admin/users"
               className="inline-flex items-center gap-2 rounded-xl border border-border bg-panelAlt px-3 py-1.5 text-xs font-semibold text-text transition hover:bg-panel"
             >
@@ -193,14 +193,14 @@ export default async function UsersAdminPage({ searchParams }: PageProps) {
                       </td>
                       <td className="px-4 py-3">
                         <div className="flex items-center gap-2">
-                          <Link
+                          <Link prefetch={false}
                             href={`/admin/users?action=edit&targetId=${user.id}`}
                             className="inline-flex h-8 px-2.5 items-center justify-center rounded-xl border border-border bg-panel text-xs font-semibold transition hover:bg-panelAlt"
                             title="Ubah"
                           >
                             Edit
                           </Link>
-                          <Link
+                          <Link prefetch={false}
                             href={`/admin/users?action=reset-password&targetId=${user.id}`}
                             className="inline-flex h-8 w-8 items-center justify-center rounded-xl border border-border bg-panel text-muted hover:text-text transition hover:bg-panelAlt"
                             title="Reset Kata Sandi"

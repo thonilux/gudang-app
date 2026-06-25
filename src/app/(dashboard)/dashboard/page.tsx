@@ -462,7 +462,7 @@ export default async function DashboardPage() {
                           )}
                         </td>
                         <td className="px-4 py-3">
-                          <Link
+                          <Link prefetch={false}
                             href={`/equipment/${item.id}`}
                             className="inline-flex items-center gap-1 font-bold text-accent hover:underline"
                           >

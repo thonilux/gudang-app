@@ -92,7 +92,7 @@ export default async function AdminPage() {
           </p>
 
           <div className="mt-5 space-y-3">
-            <Link
+            <Link prefetch={false}
               href="/admin/equipment-categories"
               className="flex items-center justify-between rounded-2xl border border-border bg-panelAlt px-4 py-3 transition hover:bg-panel"
             >
@@ -104,7 +104,7 @@ export default async function AdminPage() {
               </div>
               <Tags className="h-5 w-5 text-accent" />
             </Link>
-            <Link
+            <Link prefetch={false}
               href="/admin/inspection-templates"
               className="flex items-center justify-between rounded-2xl border border-border bg-panelAlt px-4 py-3 transition hover:bg-panel"
             >
@@ -116,7 +116,7 @@ export default async function AdminPage() {
               </div>
               <Layers3 className="h-5 w-5 text-accent" />
             </Link>
-            <Link
+            <Link prefetch={false}
               href="/admin/users"
               className="flex items-center justify-between rounded-2xl border border-border bg-panelAlt px-4 py-3 transition hover:bg-panel"
             >

@@ -368,7 +368,7 @@ export function MeasurementsViewer({ measurements }: MeasurementsViewerProps) {
                       </select>
                     </label>
 
-                    <Link
+                    <Link prefetch={false}
                       href={`/equipment/${activeMeasurement.equipmentId}`}
                       className="inline-flex items-center gap-1.5 rounded-xl border border-border bg-panelAlt px-4 py-2.5 text-xs font-semibold text-text transition hover:bg-panel self-end"
                     >

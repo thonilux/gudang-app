@@ -189,7 +189,7 @@ export default async function InspectionsPage() {
                     Jadwal berikutnya {item.nextInspectionAt ? item.nextInspectionAt.toLocaleDateString("id-ID") : "-"}
                   </p>
 
-                  <Link
+                  <Link prefetch={false}
                     href={`/equipment/${item.id}?tab=inspeksi`}
                     className="mt-3 inline-flex items-center gap-2 rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-50"
                   >
@@ -211,7 +211,7 @@ export default async function InspectionsPage() {
               Template yang siap dipakai di tab inspeksi equipment.
             </p>
           </div>
-          <Link
+          <Link prefetch={false}
             href="/admin/inspection-templates"
             className="inline-flex items-center gap-2 font-medium text-teal-800 transition hover:text-teal-950"
           >

@@ -149,7 +149,7 @@ export default async function WarehousePage({ searchParams }: PageProps) {
       {/* Double Tab Switcher */}
       <div className="border-b border-slate-200">
         <div className="flex gap-6">
-          <Link
+          <Link prefetch={false}
             href="/dashboard/warehouse?tab=serial"
             className={`pb-4 text-sm font-semibold border-b-2 transition ${
               activeTab === "serial"
@@ -159,7 +159,7 @@ export default async function WarehousePage({ searchParams }: PageProps) {
           >
             Peralatan Ber-ID (Serial)
           </Link>
-          <Link
+          <Link prefetch={false}
             href="/dashboard/warehouse?tab=nonserial"
             className={`pb-4 text-sm font-semibold border-b-2 transition ${
               activeTab === "nonserial"
@@ -432,7 +432,7 @@ export default async function WarehousePage({ searchParams }: PageProps) {
                           </td>
                           {canManageStock && (
                             <td className="px-4 py-3 text-center">
-                              <Link
+                              <Link prefetch={false}
                                 href={`/dashboard/warehouse?tab=nonserial&action=edit-stock&id=${item.id}`}
                                 className="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-slate-200 bg-white text-slate-600 hover:border-slate-300 hover:text-slate-900 transition"
                                 title="Ubah data stok"
@@ -601,7 +601,7 @@ export default async function WarehousePage({ searchParams }: PageProps) {
                   Perbarui detail kuantitas, batas minimum, lokasi, atau deskripsi barang.
                 </p>
               </div>
-              <Link
+              <Link prefetch={false}
                 href="/dashboard/warehouse?tab=nonserial"
                 className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-500 transition hover:border-slate-300 hover:text-slate-900"
                 aria-label="Tutup modal"

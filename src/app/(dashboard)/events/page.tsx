@@ -192,13 +192,13 @@ export default async function EventsPage({
                 {overview.events.map((event) => (
                   <tr key={event.id} className="hover:bg-slate-50">
                     <td className="px-4 py-3">
-                      <Link
+                      <Link prefetch={false}
                         href={`/events/${event.id}?tab=detail`}
                         className="font-medium text-slate-900 transition hover:text-blue-700"
                       >
                         {event.eventNumber}
                       </Link>
-                      <Link
+                      <Link prefetch={false}
                         href={`/events/${event.id}?tab=detail`}
                         className="mt-1 block text-xs text-slate-500 transition hover:text-blue-700"
                       >
@@ -226,7 +226,7 @@ export default async function EventsPage({
                     </td>
                     <td className="px-4 py-3">
                       <div className="flex flex-wrap gap-2">
-                        <Link
+                        <Link prefetch={false}
                           href={`/events/${event.id}?tab=detail`}
                           className="inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-50"
                         >

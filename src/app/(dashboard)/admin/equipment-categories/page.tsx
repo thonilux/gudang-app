@@ -162,7 +162,7 @@ export default async function EquipmentCategoriesAdminPage({ searchParams }: Pag
                               canMoveUp={canMoveUp}
                               canMoveDown={canMoveDown}
                             />
-                            <Link
+                            <Link prefetch={false}
                               href={`/admin/equipment-categories?edit=${category.id}`}
                               aria-label="Ubah"
                               title="Ubah"
