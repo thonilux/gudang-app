@@ -372,7 +372,7 @@ export default async function DashboardPage() {
             <p className="text-xs text-muted mb-4">Sebaran kondisi unit peralatan aktif</p>
           </div>
           
-          <div className="flex items-center gap-6 my-auto justify-center">
+          <div className="flex flex-col sm:flex-row items-center gap-6 my-auto justify-center">
             {/* SVG Donut */}
             <svg width="160" height="160" viewBox="0 0 160 160" className="overflow-visible">
               {donutPaths.map((slice, idx) => (
@@ -418,7 +418,7 @@ export default async function DashboardPage() {
             <p className="text-xs text-muted">Daftar peralatan berstatus perbaikan atau perlu inspeksi segera</p>
           </div>
 
-          <div className="overflow-hidden rounded-xl border border-border">
+          <div className="overflow-x-auto rounded-xl border border-border">
             <table className="min-w-full divide-y divide-border text-left text-xs">
               <thead className="bg-panelAlt text-muted">
                 <tr>

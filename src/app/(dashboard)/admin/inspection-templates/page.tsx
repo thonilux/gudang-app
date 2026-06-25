@@ -81,7 +81,7 @@ export default async function InspectionTemplatesAdminPage({
             <Layers3 className="h-5 w-5 text-accent" />
           </div>
 
-          <div className="mt-5 overflow-hidden rounded-2xl border border-border">
+          <div className="mt-5 overflow-x-auto rounded-2xl border border-border">
             <table className="min-w-full divide-y divide-border text-left text-sm">
               <thead className="bg-panelAlt text-muted">
                 <tr>

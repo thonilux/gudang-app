@@ -143,7 +143,7 @@ export default async function UsersAdminPage({ searchParams }: PageProps) {
             </Link>
           </div>
 
-          <div className="overflow-hidden rounded-2xl border border-border">
+          <div className="overflow-x-auto rounded-2xl border border-border">
             <table className="min-w-full divide-y divide-border text-left text-sm">
               <thead className="bg-panelAlt text-muted">
                 <tr>

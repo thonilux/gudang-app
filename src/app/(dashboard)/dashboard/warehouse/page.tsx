@@ -186,7 +186,7 @@ export default async function WarehousePage({ searchParams }: PageProps) {
                 </div>
               </div>
 
-              <div className="mt-5 overflow-hidden rounded-2xl border border-slate-200">
+              <div className="mt-5 overflow-x-auto rounded-2xl border border-slate-200">
                 <table className="min-w-full divide-y divide-slate-200 text-left text-sm">
                   <thead className="bg-slate-50 text-slate-600">
                     <tr>
@@ -291,7 +291,7 @@ export default async function WarehousePage({ searchParams }: PageProps) {
                 <Repeat className="h-5 w-5 text-slate-400" />
               </div>
 
-              <div className="mt-5 overflow-hidden rounded-2xl border border-slate-200">
+              <div className="mt-5 overflow-x-auto rounded-2xl border border-slate-200">
                 <table className="min-w-full divide-y divide-slate-200 text-left text-sm">
                   <thead className="bg-slate-50 text-slate-600">
                     <tr>
@@ -393,7 +393,7 @@ export default async function WarehousePage({ searchParams }: PageProps) {
                 </div>
               </div>
 
-              <div className="mt-5 overflow-hidden rounded-2xl border border-slate-200">
+              <div className="mt-5 overflow-x-auto rounded-2xl border border-slate-200">
                 <table className="min-w-full divide-y divide-slate-200 text-left text-sm">
                   <thead className="bg-slate-50 text-slate-600">
                     <tr>

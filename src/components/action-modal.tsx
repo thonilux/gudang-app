@@ -62,7 +62,7 @@ export function ActionModal({
           }}
         >
           <div className="w-full max-w-2xl overflow-hidden rounded-[1.5rem] border border-slate-200 bg-white shadow-2xl">
-            <div className="flex items-start justify-between gap-4 border-b border-slate-200 bg-slate-50 px-6 py-5">
+            <div className="flex items-start justify-between gap-4 border-b border-slate-200 bg-slate-50 px-4 sm:px-6 py-4 sm:py-5">
               <div>
                 <p className="text-xs font-semibold uppercase tracking-[0.2em] text-blue-600">Formulir</p>
                 <h3 className="mt-2 text-xl font-semibold tracking-tight text-slate-900">{title}</h3>
@@ -77,7 +77,7 @@ export function ActionModal({
                 <X className="h-4 w-4" />
               </button>
             </div>
-            <div className="max-h-[calc(100vh-10rem)] overflow-auto px-6 py-6">{children}</div>
+            <div className="max-h-[calc(100vh-10rem)] overflow-auto px-4 sm:px-6 py-4 sm:py-6">{children}</div>
           </div>
         </div>
       ) : null}
