@@ -4,20 +4,31 @@ import { drizzle, type NodePgDatabase } from "drizzle-orm/node-postgres";
 import { Pool } from "pg";
 
 import * as schema from "@/db/schema";
-import { getRequiredEnv } from "@/lib/env";
 
 let cachedPool: Pool | undefined;
 let cachedDb: NodePgDatabase<typeof schema> | undefined;
 
 export function getDb() {
   if (!cachedPool) {
-    const connectionString = process.env.DATABASE_URL || process.env.POSTGRES_URL;
+    let connectionString = process.env.DATABASE_URL || process.env.POSTGRES_URL;
     if (!connectionString) {
       throw new Error("Environment variable DATABASE_URL or POSTGRES_URL is required.");
     }
+    
+    // Clean connection string to prevent pg-connection-string from overriding SSL config
+    try {
+      const dbUrl = new URL(connectionString);
+      dbUrl.searchParams.delete("sslmode");
+      connectionString = dbUrl.toString();
+    } catch {
+      // fallback if URL is not standard
+    }
+
+    const isLocal = connectionString.includes("localhost") || connectionString.includes("127.0.0.1");
+
     cachedPool = new Pool({
       connectionString,
-      ssl: process.env.NODE_ENV === "production" ? { rejectUnauthorized: false } : undefined,
+      ssl: isLocal ? undefined : { rejectUnauthorized: false },
     });
   }
 

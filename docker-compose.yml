@@ -1,0 +1,29 @@
+version: '3.8'
+
+services:
+  db:
+    image: postgres:15-alpine
+    container_name: gudang-postgres
+    restart: unless-stopped
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: password_gudang_2026 # Silakan sesuaikan password Anda
+      POSTGRES_DB: gudang_dev
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+  cloudflared:
+    image: cloudflare/cloudflared:latest
+    container_name: gudang-cloudflared
+    restart: unless-stopped
+    depends_on:
+      - db
+    environment:
+      - TUNNEL_TOKEN=${CLOUDFLARE_TUNNEL_TOKEN}
+    command: tunnel --no-autoupdate run
+
+volumes:
+  postgres_data:
+    driver: local
