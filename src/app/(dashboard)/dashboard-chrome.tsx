@@ -147,7 +147,7 @@ export function DashboardChrome({ children, user, roles, isAdmin, logoutAction }
             </div>
             <div className="mt-4 text-center text-[10px] text-muted">
               <p>© {new Date().getFullYear()} by emjijaya. All rights reserved.</p>
-              <p className="mt-0.5">Developer: <span className="font-semibold text-text">Thonilux</span></p>
+              <p className="mt-0.5">Developer: <a href="https://github.com/thonilux" target="_blank" rel="noopener noreferrer" className="font-semibold text-blue-600 dark:text-blue-400 hover:underline">Thonilux</a></p>
             </div>
           </div>
         </div>
@@ -238,7 +238,7 @@ export function DashboardChrome({ children, user, roles, isAdmin, logoutAction }
               </div>
               <div className="mt-4 text-center text-[10px] text-muted">
                 <p>© {new Date().getFullYear()} by emjijaya. All rights reserved.</p>
-                <p className="mt-0.5">Developer: <span className="font-semibold text-text">Thonilux</span></p>
+                <p className="mt-0.5">Developer: <a href="https://github.com/thonilux" target="_blank" rel="noopener noreferrer" className="font-semibold text-blue-600 dark:text-blue-400 hover:underline">Thonilux</a></p>
               </div>
             </div>
           </aside>
@@ -294,7 +294,7 @@ export function DashboardChrome({ children, user, roles, isAdmin, logoutAction }
           <footer className="mt-12 border-t border-border pt-6 pb-8 text-center text-xs text-muted">
             <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
               <p>© {new Date().getFullYear()} by emjijaya. All rights reserved.</p>
-              <p>Developed with ❤️ by <span className="font-semibold text-text">Thonilux</span></p>
+              <p>Developed with ❤️ by <a href="https://github.com/thonilux" target="_blank" rel="noopener noreferrer" className="font-semibold text-blue-600 dark:text-blue-400 hover:underline">Thonilux</a></p>
             </div>
           </footer>
         </main>

@@ -14,6 +14,7 @@ import {
   warehouseStockMovements,
   warehouseSerialItemMovements,
   warehouseSerialItems,
+  equipmentLocations,
 } from "@/db/schema";
 import { getCurrentAuthSession, writeAuditLog } from "@/lib/auth";
 import { hasPermission, isAdmin } from "@/lib/rbac";
@@ -164,6 +165,21 @@ export async function createWarehouseLocationAction(
       updatedAt: new Date(),
     })
     .returning({ id: warehouseLocations.id, code: warehouseLocations.code });
+
+  // Sync to equipment_locations
+  try {
+    await db
+      .insert(equipmentLocations)
+      .values({
+        id: row.id,
+        code: parsed.data.code,
+        name: parsed.data.name,
+        parentLocationId: parsed.data.parentLocationId ?? null,
+      })
+      .onConflictDoNothing();
+  } catch (err) {
+    console.error("Failed to sync location to equipment_locations:", err);
+  }
 
   await writeAuditLog({
     userId: session.user.id,

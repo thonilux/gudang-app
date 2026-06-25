@@ -11,6 +11,7 @@ import {
   equipmentLocations,
   equipmentStatusLogs,
   users,
+  warehouseLocations,
 } from "@/db/schema";
 
 export const EQUIPMENT_STATUS_OPTIONS = [
@@ -158,6 +159,36 @@ function buildLocationLabelMap(rows: Array<{
 
 export async function getEquipmentReferenceData() {
   const db = getDb();
+
+  // Sync missing warehouse locations to equipment locations
+  try {
+    const missingLocations = await db
+      .select({
+        id: warehouseLocations.id,
+        code: warehouseLocations.code,
+        name: warehouseLocations.name,
+        parentLocationId: warehouseLocations.parentLocationId,
+      })
+      .from(warehouseLocations)
+      .leftJoin(equipmentLocations, eq(warehouseLocations.id, equipmentLocations.id))
+      .where(sql`${equipmentLocations.id} IS NULL`);
+
+    if (missingLocations.length > 0) {
+      for (const loc of missingLocations) {
+        await db
+          .insert(equipmentLocations)
+          .values({
+            id: loc.id,
+            code: loc.code,
+            name: loc.name,
+            parentLocationId: loc.parentLocationId,
+          })
+          .onConflictDoNothing();
+      }
+    }
+  } catch (err) {
+    console.error("Failed to sync warehouse locations to equipment:", err);
+  }
 
   const [categoryRows, locationRows] = await Promise.all([
     db

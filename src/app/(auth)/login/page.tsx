@@ -34,7 +34,7 @@ export default async function LoginPage() {
 
         <div className="mt-8 pt-6 border-t border-slate-100 dark:border-slate-800 text-center text-[11px] text-slate-400 dark:text-slate-500">
           <p>© {new Date().getFullYear()} by emjijaya. All rights reserved.</p>
-          <p className="mt-1">Developed by <span className="font-semibold text-slate-600 dark:text-slate-300">Thonilux</span></p>
+          <p className="mt-1">Developed by <a href="https://github.com/thonilux" target="_blank" rel="noopener noreferrer" className="font-semibold text-blue-600 dark:text-blue-400 hover:underline">Thonilux</a></p>
         </div>
       </section>
     </main>
