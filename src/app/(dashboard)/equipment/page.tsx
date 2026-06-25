@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
-import { ArrowRight, ClipboardCheck, Eye, LayoutGrid, MapPin, Search, ShieldAlert, ShieldCheck, Wrench } from "lucide-react";
+import { ArrowRight, ClipboardCheck, Eye, LayoutGrid, MapPin, Search, ShieldAlert, ShieldCheck, Wrench, PencilLine } from "lucide-react";
 
 import { ActionModal } from "@/components/action-modal";
 import { getCurrentAuthSession } from "@/lib/auth";
@@ -180,32 +180,130 @@ export default async function EquipmentPage({
           ) : null}
         </form>
 
-        <div className="mt-5 overflow-x-auto rounded-2xl border border-slate-200">
-          <table className="min-w-[750px] md:min-w-full divide-y divide-slate-200 text-left text-sm">
-              <thead className="bg-slate-50 text-slate-600">
-                <tr>
-                  <th className="px-4 py-3 font-medium">Kode</th>
-                  <th className="px-4 py-3 font-medium">Peralatan</th>
-                  <th className="px-4 py-3 font-medium">Status</th>
-                  <th className="px-4 py-3 font-medium">Lokasi</th>
-                  <th className="px-4 py-3 font-medium">Aksi</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-100 bg-white">
-                {filteredItems.length === 0 ? (
+          <>
+            {/* Desktop Table View */}
+            <div className="hidden md:block mt-5 overflow-hidden rounded-2xl border border-slate-200">
+              <table className="min-w-full divide-y divide-slate-200 text-left text-sm">
+                <thead className="bg-slate-50 text-slate-600">
                   <tr>
-                    <td className="px-4 py-5 text-slate-500" colSpan={5}>
-                      {searchQuery ? "Tidak ada peralatan yang cocok." : "Belum ada peralatan."}
-                    </td>
+                    <th className="px-4 py-3 font-medium">Kode</th>
+                    <th className="px-4 py-3 font-medium">Peralatan</th>
+                    <th className="px-4 py-3 font-medium">Status</th>
+                    <th className="px-4 py-3 font-medium">Lokasi</th>
+                    <th className="px-4 py-3 font-medium">Aksi</th>
                   </tr>
-                ) : (
-                  filteredItems.map((item) => (
-                    <tr key={item.id}>
-                      <td className="px-4 py-3 font-medium text-slate-900">{item.code}</td>
-                      <td className="px-4 py-3 text-slate-700">
+                </thead>
+                <tbody className="divide-y divide-slate-100 bg-white">
+                  {filteredItems.length === 0 ? (
+                    <tr>
+                      <td className="px-4 py-5 text-slate-500" colSpan={5}>
+                        {searchQuery ? "Tidak ada peralatan yang cocok." : "Belum ada peralatan."}
+                      </td>
+                    </tr>
+                  ) : (
+                    filteredItems.map((item) => (
+                      <tr key={item.id}>
+                        <td className="px-4 py-3 font-medium text-slate-900">{item.code}</td>
+                        <td className="px-4 py-3 text-slate-700">
+                          <Link prefetch={false}
+                            href={`/equipment/${item.id}?tab=ikhtisar`}
+                            className="font-medium text-slate-900 transition hover:text-teal-700"
+                          >
+                            {item.name}
+                          </Link>
+                          <p className="mt-1 text-xs text-slate-500">
+                            {buildEquipmentSummaryLine({
+                              brand: item.brand,
+                              model: item.model,
+                              serialNumber: item.serialNumber,
+                              categoryName: item.categoryName,
+                            })}
+                          </p>
+                        </td>
+                        <td className="px-4 py-3">
+                          <span
+                            className={`inline-flex rounded-full border px-3 py-1 text-xs font-medium ${getEquipmentStatusTone(item.status)}`}
+                          >
+                            {getEquipmentStatusLabel(item.status)}
+                          </span>
+                        </td>
+                        <td className="px-4 py-3 text-slate-600">
+                          <div className="flex items-center gap-2">
+                            <MapPin className="h-4 w-4 text-slate-400" />
+                            <span>{item.locationLabel ?? "Belum ditentukan"}</span>
+                          </div>
+                        </td>
+                        <td className="px-4 py-3">
+                          <div className="flex flex-wrap gap-2">
+                            <ActionModal
+                              title="Ubah peralatan"
+                              description="Perbarui data dasar peralatan tanpa keluar dari daftar."
+                              triggerLabel="Ubah peralatan"
+                            >
+                              <EquipmentUpsertForm
+                                mode="edit"
+                                categories={referenceData.categories}
+                                locations={referenceData.locations}
+                                initialValues={{
+                                  id: item.id,
+                                  code: item.code,
+                                  name: item.name,
+                                  categoryId: item.categoryId,
+                                  locationId: item.locationId ?? "",
+                                  brand: item.brand,
+                                  model: item.model,
+                                  serialNumber: item.serialNumber ?? "",
+                                  status: item.status as EquipmentStatusValue,
+                                  conditionNote: item.conditionNote,
+                                  specificationNote: item.specificationNote,
+                                  notes: item.notes,
+                                  lastInspectionAt: formatDateInput(item.lastInspectionAt),
+                                  nextInspectionAt: formatDateInput(item.nextInspectionAt),
+                                }}
+                              />
+                            </ActionModal>
+                            <Link prefetch={false}
+                              href={`/equipment/${item.id}?tab=inspeksi`}
+                              className="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-slate-300 bg-white text-slate-700 transition hover:bg-slate-50"
+                              aria-label="Inspeksi"
+                              title="Inspeksi"
+                            >
+                              <ClipboardCheck className="h-4 w-4" />
+                              <span className="sr-only">Inspeksi</span>
+                            </Link>
+                            <Link prefetch={false}
+                              href={`/equipment/${item.id}?tab=ikhtisar`}
+                              className="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-slate-300 bg-white text-slate-700 transition hover:bg-slate-50"
+                              aria-label="Detail"
+                              title="Detail"
+                            >
+                              <Eye className="h-4 w-4" />
+                              <span className="sr-only">Detail</span>
+                            </Link>
+                          </div>
+                        </td>
+                      </tr>
+                    ))
+                  )}
+                </tbody>
+              </table>
+            </div>
+
+            {/* Mobile Card List View */}
+            <div className="md:hidden mt-5 space-y-4">
+              {filteredItems.length === 0 ? (
+                <p className="text-sm text-slate-500 py-4 text-center">
+                  {searchQuery ? "Tidak ada peralatan yang cocok." : "Belum ada peralatan."}
+                </p>
+              ) : (
+                filteredItems.map((item) => (
+                  <div key={item.id} className="rounded-2xl border border-slate-200 bg-white p-4 shadow-soft space-y-3">
+                    <div className="flex items-start justify-between gap-3">
+                      <div>
+                        <span className="text-[10px] font-bold text-slate-400 block">{item.code}</span>
                         <Link prefetch={false}
                           href={`/equipment/${item.id}?tab=ikhtisar`}
-                          className="font-medium text-slate-900 transition hover:text-teal-700"
+                          className="font-bold text-slate-900 hover:text-teal-700 transition mt-1 block text-sm"
                         >
                           {item.name}
                         </Link>
@@ -217,75 +315,68 @@ export default async function EquipmentPage({
                             categoryName: item.categoryName,
                           })}
                         </p>
-                      </td>
-                      <td className="px-4 py-3">
-                        <span
-                          className={`inline-flex rounded-full border px-3 py-1 text-xs font-medium ${getEquipmentStatusTone(item.status)}`}
-                        >
-                          {getEquipmentStatusLabel(item.status)}
-                        </span>
-                      </td>
-                      <td className="px-4 py-3 text-slate-600">
-                        <div className="flex items-center gap-2">
-                          <MapPin className="h-4 w-4 text-slate-400" />
-                          <span>{item.locationLabel ?? "Belum ditentukan"}</span>
-                        </div>
-                      </td>
-                      <td className="px-4 py-3">
-                        <div className="flex flex-wrap gap-2">
-                          <ActionModal
-                            title="Ubah peralatan"
-                            description="Perbarui data dasar peralatan tanpa keluar dari daftar."
-                            triggerLabel="Ubah peralatan"
-                          >
-                            <EquipmentUpsertForm
-                              mode="edit"
-                              categories={referenceData.categories}
-                              locations={referenceData.locations}
-                              initialValues={{
-                                id: item.id,
-                                code: item.code,
-                                name: item.name,
-                                categoryId: item.categoryId,
-                                locationId: item.locationId ?? "",
-                                brand: item.brand,
-                                model: item.model,
-                                serialNumber: item.serialNumber ?? "",
-                                status: item.status as EquipmentStatusValue,
-                                conditionNote: item.conditionNote,
-                                specificationNote: item.specificationNote,
-                                notes: item.notes,
-                                lastInspectionAt: formatDateInput(item.lastInspectionAt),
-                                nextInspectionAt: formatDateInput(item.nextInspectionAt),
-                              }}
-                            />
-                          </ActionModal>
-                          <Link prefetch={false}
-                            href={`/equipment/${item.id}?tab=inspeksi`}
-                            className="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-slate-300 bg-white text-slate-700 transition hover:bg-slate-50"
-                            aria-label="Inspeksi"
-                            title="Inspeksi"
-                          >
-                            <ClipboardCheck className="h-4 w-4" />
-                            <span className="sr-only">Inspeksi</span>
-                          </Link>
-                          <Link prefetch={false}
-                            href={`/equipment/${item.id}?tab=ikhtisar`}
-                            className="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-slate-300 bg-white text-slate-700 transition hover:bg-slate-50"
-                            aria-label="Detail"
-                            title="Detail"
-                          >
-                            <Eye className="h-4 w-4" />
-                            <span className="sr-only">Detail</span>
-                          </Link>
-                        </div>
-                      </td>
-                    </tr>
-                  ))
-                )}
-              </tbody>
-          </table>
-        </div>
+                      </div>
+                      <span
+                        className={`inline-flex rounded-full border px-2.5 py-0.5 text-[10px] font-semibold ${getEquipmentStatusTone(item.status)}`}
+                      >
+                        {getEquipmentStatusLabel(item.status)}
+                      </span>
+                    </div>
+
+                    <div className="border-t border-slate-100 pt-3 flex items-center gap-2 text-xs text-slate-600">
+                      <MapPin className="h-4 w-4 text-slate-400 shrink-0" />
+                      <span>{item.locationLabel ?? "Belum ditentukan"}</span>
+                    </div>
+
+                    <div className="border-t border-slate-100 pt-3 flex items-center justify-end gap-2">
+                      <ActionModal
+                        title="Ubah peralatan"
+                        description="Perbarui data dasar peralatan tanpa keluar dari daftar."
+                        triggerLabel="Ubah peralatan"
+                        triggerIcon={<PencilLine className="h-3.5 w-3.5" />}
+                      >
+                        <EquipmentUpsertForm
+                          mode="edit"
+                          categories={referenceData.categories}
+                          locations={referenceData.locations}
+                          initialValues={{
+                            id: item.id,
+                            code: item.code,
+                            name: item.name,
+                            categoryId: item.categoryId,
+                            locationId: item.locationId ?? "",
+                            brand: item.brand,
+                            model: item.model,
+                            serialNumber: item.serialNumber ?? "",
+                            status: item.status as EquipmentStatusValue,
+                            conditionNote: item.conditionNote,
+                            specificationNote: item.specificationNote,
+                            notes: item.notes,
+                            lastInspectionAt: formatDateInput(item.lastInspectionAt),
+                            nextInspectionAt: formatDateInput(item.nextInspectionAt),
+                          }}
+                        />
+                      </ActionModal>
+                      <Link prefetch={false}
+                        href={`/equipment/${item.id}?tab=inspeksi`}
+                        className="inline-flex h-9 w-9 items-center justify-center rounded-xl border border-slate-300 bg-white text-slate-700 hover:bg-slate-50 transition"
+                        title="Inspeksi"
+                      >
+                        <ClipboardCheck className="h-4 w-4" />
+                      </Link>
+                      <Link prefetch={false}
+                        href={`/equipment/${item.id}?tab=ikhtisar`}
+                        className="inline-flex h-9 w-9 items-center justify-center rounded-xl border border-slate-300 bg-white text-slate-700 hover:bg-slate-50 transition"
+                        title="Detail"
+                      >
+                        <Eye className="h-4 w-4" />
+                      </Link>
+                    </div>
+                  </div>
+                ))
+              )}
+            </div>
+          </>
       </section>
 
       <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-soft">

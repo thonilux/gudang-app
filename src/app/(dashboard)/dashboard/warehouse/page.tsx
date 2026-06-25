@@ -186,8 +186,9 @@ export default async function WarehousePage({ searchParams }: PageProps) {
                 </div>
               </div>
 
-              <div className="mt-5 overflow-x-auto rounded-2xl border border-slate-200">
-                <table className="min-w-[600px] md:min-w-full divide-y divide-slate-200 text-left text-sm">
+              {/* Desktop Table View */}
+              <div className="hidden md:block mt-5 overflow-x-auto rounded-2xl border border-slate-200">
+                <table className="min-w-full divide-y divide-slate-200 text-left text-sm">
                   <thead className="bg-slate-50 text-slate-600">
                     <tr>
                       <th className="px-4 py-3 font-medium">Kode</th>
@@ -231,6 +232,50 @@ export default async function WarehousePage({ searchParams }: PageProps) {
                     )}
                   </tbody>
                 </table>
+              </div>
+
+              {/* Mobile Card List View */}
+              <div className="md:hidden mt-5 space-y-4">
+                {overview.locations.length === 0 ? (
+                  <div className="rounded-2xl border border-slate-200 bg-white p-6 text-center text-sm text-slate-500">
+                    Belum ada lokasi gudang.
+                  </div>
+                ) : (
+                  overview.locations.map((location) => {
+                    const locationItems = serialOverview.items.filter((item) => item.locationId === location.id);
+                    const countInfo = itemCountByLocationId.get(location.id);
+                    return (
+                      <div key={location.id} className="rounded-2xl border border-slate-200 bg-white p-4 shadow-soft space-y-3">
+                        <div className="flex items-start justify-between gap-3">
+                          <div>
+                            <h4 className="text-sm font-bold text-slate-900">{location.name}</h4>
+                            <p className="text-xs text-slate-500 mt-1">Kode: {location.code}</p>
+                          </div>
+                          {location.parentLocationId && (
+                            <span className="inline-flex rounded-full border border-blue-200 bg-blue-50 px-2 py-0.5 text-[10px] font-semibold text-blue-800">
+                              Sub-lokasi
+                            </span>
+                          )}
+                        </div>
+                        {location.parentLocationId && (
+                          <div className="text-xs text-slate-600">
+                            <span className="font-semibold text-slate-700">Induk:</span> {location.label}
+                          </div>
+                        )}
+                        <div className="border-t border-slate-100 pt-3 text-xs text-slate-600">
+                          <p className="font-semibold text-slate-700">Peralatan ({countInfo?.count ?? 0} item):</p>
+                          <p className="text-slate-500 mt-1 text-[11px] leading-normal">
+                            {countInfo?.names.length
+                              ? countInfo.names.join(", ")
+                              : locationItems.length === 0
+                                ? "Belum ada item"
+                                : locationItems.slice(0, 3).map((item) => item.name).join(", ")}
+                          </p>
+                        </div>
+                      </div>
+                    );
+                  })
+                )}
               </div>
             </article>
 
@@ -291,8 +336,9 @@ export default async function WarehousePage({ searchParams }: PageProps) {
                 <Repeat className="h-5 w-5 text-slate-400" />
               </div>
 
-              <div className="mt-5 overflow-x-auto rounded-2xl border border-slate-200">
-                <table className="min-w-[750px] md:min-w-full divide-y divide-slate-200 text-left text-sm">
+              {/* Desktop Table View */}
+              <div className="hidden md:block mt-5 overflow-x-auto rounded-2xl border border-slate-200">
+                <table className="min-w-full divide-y divide-slate-200 text-left text-sm">
                   <thead className="bg-slate-50 text-slate-600">
                     <tr>
                       <th className="px-4 py-3 font-medium">ID (Serial)</th>
@@ -326,6 +372,33 @@ export default async function WarehousePage({ searchParams }: PageProps) {
                     )}
                   </tbody>
                 </table>
+              </div>
+
+              {/* Mobile Card List View */}
+              <div className="md:hidden mt-5 space-y-4">
+                {serialOverview.items.length === 0 ? (
+                  <div className="rounded-2xl border border-slate-200 bg-white p-6 text-center text-sm text-slate-500">
+                    Belum ada peralatan terdaftar.
+                  </div>
+                ) : (
+                  serialOverview.items.map((item) => (
+                    <div key={item.id} className="rounded-2xl border border-slate-200 bg-white p-4 shadow-soft space-y-3">
+                      <div className="flex items-start justify-between gap-3">
+                        <div>
+                          <h4 className="text-sm font-bold text-slate-900">{item.name}</h4>
+                          <p className="text-xs text-slate-500 mt-1">Serial: {item.serialNumber}</p>
+                        </div>
+                        <span className={`inline-flex rounded-full border px-2 py-0.5 text-[10px] font-semibold ${getWarehouseSerialStatusTone(item.status)}`}>
+                          {getWarehouseSerialStatusLabel(item.status)}
+                        </span>
+                      </div>
+                      <div className="border-t border-slate-100 pt-3 text-xs text-slate-600 space-y-1">
+                        <p><span className="font-semibold text-slate-700">Kategori:</span> {item.category || "-"}</p>
+                        <p><span className="font-semibold text-slate-700">Lokasi:</span> {item.locationLabel ?? "-"}</p>
+                      </div>
+                    </div>
+                  ))
+                )}
               </div>
             </article>
 
@@ -393,8 +466,9 @@ export default async function WarehousePage({ searchParams }: PageProps) {
                 </div>
               </div>
 
-              <div className="mt-5 overflow-x-auto rounded-2xl border border-slate-200">
-                <table className="min-w-[800px] md:min-w-full divide-y divide-slate-200 text-left text-sm">
+              {/* Desktop Table View */}
+              <div className="hidden md:block mt-5 overflow-x-auto rounded-2xl border border-slate-200">
+                <table className="min-w-full divide-y divide-slate-200 text-left text-sm">
                   <thead className="bg-slate-50 text-slate-600">
                     <tr>
                       <th className="px-4 py-3 font-medium">SKU</th>
@@ -446,6 +520,48 @@ export default async function WarehousePage({ searchParams }: PageProps) {
                     )}
                   </tbody>
                 </table>
+              </div>
+
+              {/* Mobile Card List View */}
+              <div className="md:hidden mt-5 space-y-4">
+                {overview.items.length === 0 ? (
+                  <div className="rounded-2xl border border-slate-200 bg-white p-6 text-center text-sm text-slate-500">
+                    Belum ada data barang habis pakai.
+                  </div>
+                ) : (
+                  overview.items.map((item) => (
+                    <div key={item.id} className="rounded-2xl border border-slate-200 bg-white p-4 shadow-soft space-y-3">
+                      <div className="flex items-start justify-between gap-3">
+                        <div>
+                          <h4 className="text-sm font-bold text-slate-900">{item.name}</h4>
+                          <p className="text-xs text-slate-500 mt-1">SKU: {item.sku}</p>
+                        </div>
+                        <span className={`inline-flex rounded-full border px-2 py-0.5 text-[10px] font-semibold ${getWarehouseItemStatusTone(item.currentQuantity, item.minimumQuantity)}`}>
+                          {getWarehouseItemStatusLabel(item.currentQuantity, item.minimumQuantity)}
+                        </span>
+                      </div>
+                      <div className="border-t border-slate-100 pt-3 text-xs text-slate-600 space-y-1">
+                        <p><span className="font-semibold text-slate-700">Kategori:</span> {item.category || "-"}</p>
+                        <p><span className="font-semibold text-slate-700">Lokasi:</span> {item.locationLabel ?? "-"}</p>
+                        <p>
+                          <span className="font-semibold text-slate-700">Stok saat ini:</span> {item.currentQuantity} {item.unit}{" "}
+                          <span className="text-[10px] text-slate-400 font-normal">(Min: {item.minimumQuantity})</span>
+                        </p>
+                      </div>
+                      {canManageStock && (
+                        <div className="border-t border-slate-100 pt-3 flex justify-end">
+                          <Link prefetch={false}
+                            href={`/dashboard/warehouse?tab=nonserial&action=edit-stock&id=${item.id}`}
+                            className="inline-flex items-center gap-1.5 rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-medium text-slate-700 hover:bg-slate-50 transition"
+                          >
+                            <Edit2 className="h-3 w-3" />
+                            Ubah stok
+                          </Link>
+                        </div>
+                      )}
+                    </div>
+                  ))
+                )}
               </div>
             </article>
 

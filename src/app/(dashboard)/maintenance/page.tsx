@@ -342,8 +342,9 @@ export default async function MaintenancePage({
             ) : null}
           </form>
 
-          <div className="mt-5 overflow-x-auto rounded-2xl border border-slate-200">
-            <table className="min-w-[800px] md:min-w-full divide-y divide-slate-200 text-left text-sm">
+          {/* Desktop Table View */}
+          <div className="hidden md:block mt-5 overflow-x-auto rounded-2xl border border-slate-200">
+            <table className="min-w-full divide-y divide-slate-200 text-left text-sm">
               <thead className="bg-slate-50 text-slate-600">
                 <tr>
                   <th className="px-4 py-3 font-medium">Ticket</th>
@@ -436,6 +437,105 @@ export default async function MaintenancePage({
                 )}
               </tbody>
             </table>
+          </div>
+
+          {/* Mobile Card List View */}
+          <div className="md:hidden mt-5 space-y-4">
+            {filteredTickets.length === 0 ? (
+              <div className="rounded-2xl border border-slate-200 bg-white p-6 text-center text-sm text-slate-500">
+                {searchQuery ? "Tidak ada ticket yang cocok." : "Belum ada ticket maintenance."}
+              </div>
+            ) : (
+              filteredTickets.map((ticket) => {
+                const isActive = ticket.id === activeTicket.ticket?.id;
+                return (
+                  <div
+                    key={ticket.id}
+                    className={`rounded-2xl border bg-white p-4 shadow-soft space-y-3 transition ${
+                      isActive ? "border-blue-500 ring-1 ring-blue-500 bg-blue-50/10" : "border-slate-200"
+                    }`}
+                  >
+                    <div className="flex items-start justify-between gap-3">
+                      <div>
+                        <Link prefetch={false}
+                          href={`/maintenance?ticket=${ticket.id}`}
+                          className="font-bold text-slate-900 hover:text-blue-700 transition text-sm"
+                        >
+                          {ticket.ticketNumber}
+                        </Link>
+                        <h4 className="text-xs font-semibold text-slate-700 mt-1">{ticket.subject}</h4>
+                      </div>
+                      <div className="flex flex-col items-end gap-1.5">
+                        <span
+                          className={`inline-flex rounded-full border px-2 py-0.5 text-[10px] font-semibold ${getStatusTone(ticket.status)}`}
+                          style={getStatusBadgeStyle(ticket.status)}
+                        >
+                          {statusLabel(ticket.status)}
+                        </span>
+                        <span
+                          className={`inline-flex rounded-full border px-2 py-0.5 text-[10px] font-semibold ${getPriorityTone(ticket.priority)}`}
+                        >
+                          {priorityLabel(ticket.priority)}
+                        </span>
+                      </div>
+                    </div>
+
+                    <div className="border-t border-slate-100 pt-3 text-xs text-slate-600 space-y-1">
+                      <p>
+                        <span className="font-semibold text-slate-700">Peralatan:</span>{" "}
+                        <Link prefetch={false}
+                          href={`/maintenance?ticket=${ticket.id}`}
+                          className="hover:text-blue-700 transition underline decoration-dotted"
+                        >
+                          {ticket.equipmentName}
+                        </Link>{" "}
+                        ({ticket.equipmentCode})
+                      </p>
+                      <p>
+                        <span className="font-semibold text-slate-700">Vendor:</span> {ticket.vendorName ?? "Tanpa vendor"}
+                      </p>
+                    </div>
+
+                    <div className="border-t border-slate-100 pt-3 flex items-center justify-between gap-2">
+                      <Link prefetch={false}
+                        href={`/maintenance?ticket=${ticket.id}`}
+                        className="inline-flex items-center gap-1.5 rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-medium text-slate-700 hover:bg-slate-50 transition"
+                      >
+                        Detail
+                      </Link>
+                      <ActionModal
+                        title="Ubah ticket"
+                        description="Perbarui status, diagnosis, dan biaya ticket ini."
+                        triggerLabel="Ubah"
+                        triggerIcon={<Ticket className="h-3.5 w-3.5" />}
+                      >
+                        <MaintenanceTicketForm
+                          mode="edit"
+                          equipmentOptions={equipmentOptions}
+                          vendorOptions={overview.vendors}
+                          initialValues={{
+                            id: ticket.id,
+                            equipmentId: ticket.equipmentId,
+                            vendorId:
+                              overview.vendors.find((vendor) => vendor.label === ticket.vendorName)?.id ?? "",
+                            subject: ticket.subject,
+                            complaint: ticket.complaint,
+                            diagnosis: ticket.diagnosis,
+                            actionPlan: ticket.actionPlan,
+                            status: ticket.status as TicketStatusValue,
+                            priority: ticket.priority as PriorityValue,
+                            dueAt: formatDateInput(ticket.dueAt),
+                            estimatedCost: ticket.estimatedCost,
+                            actualCost: ticket.actualCost,
+                          }}
+                          redirectTo={`/maintenance?ticket=${ticket.id}`}
+                        />
+                      </ActionModal>
+                    </div>
+                  </div>
+                );
+              })
+            )}
           </div>
         </article>
 

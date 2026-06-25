@@ -219,8 +219,9 @@ export default async function InspectionsPage() {
           </Link>
         </div>
 
-        <div className="mt-5 overflow-x-auto rounded-2xl border border-slate-200">
-          <table className="min-w-[650px] md:min-w-full divide-y divide-slate-200 text-left text-sm">
+        {/* Desktop Table View */}
+        <div className="hidden md:block mt-5 overflow-x-auto rounded-2xl border border-slate-200">
+          <table className="min-w-full divide-y divide-slate-200 text-left text-sm">
             <thead className="bg-slate-50 text-slate-600">
               <tr>
                 <th className="px-4 py-3 font-medium">Template</th>
@@ -253,6 +254,33 @@ export default async function InspectionsPage() {
               )}
             </tbody>
           </table>
+        </div>
+
+        {/* Mobile Card List View */}
+        <div className="md:hidden mt-5 space-y-4">
+          {activeTemplates.length === 0 ? (
+            <div className="rounded-2xl border border-slate-200 bg-white p-6 text-center text-sm text-slate-500">
+              Belum ada template aktif.
+            </div>
+          ) : (
+            activeTemplates.map((template) => (
+              <div key={template.id} className="rounded-2xl border border-slate-200 bg-white p-4 shadow-soft space-y-3">
+                <div className="flex items-start justify-between gap-3">
+                  <div>
+                    <h4 className="text-sm font-bold text-slate-900">{template.name}</h4>
+                    <p className="text-xs text-slate-500 mt-1">{template.categoryName}</p>
+                  </div>
+                  <span className="inline-flex items-center gap-1.5 rounded-full border border-emerald-200 bg-emerald-50 px-2 py-0.5 text-[10px] font-semibold text-emerald-800">
+                    <Sparkles className="h-3 w-3" />
+                    Aktif
+                  </span>
+                </div>
+                <div className="border-t border-slate-100 pt-3 text-xs text-slate-600">
+                  <span className="font-semibold text-slate-700">Checklist:</span> {template.checklist.length} item
+                </div>
+              </div>
+            ))
+          )}
         </div>
       </section>
     </div>
