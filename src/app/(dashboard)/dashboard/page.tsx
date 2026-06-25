@@ -8,7 +8,7 @@ import {
   Package,
 } from "lucide-react";
 import Link from "next/link";
-import { gte, eq, or, desc, sql } from "drizzle-orm";
+import { gte, eq, or, desc, sql, inArray } from "drizzle-orm";
 
 import { getDb } from "@/db";
 import { getCurrentAuthSession } from "@/lib/auth";
@@ -60,7 +60,6 @@ export default async function DashboardPage() {
     recentTicketsForCost,
     problematicEquipment,
     upcomingInspections,
-    latestMeasurements,
   ] = await Promise.all([
     db.query.auditLogs.findMany({
       orderBy: (table, { desc }) => [desc(table.createdAt)],
@@ -113,17 +112,23 @@ export default async function DashboardPage() {
       .where(sql`${equipment.nextInspectionAt} is not null`)
       .orderBy(equipment.nextInspectionAt)
       .limit(5),
-    db
-      .select({
-        equipmentId: equipmentMeasurements.equipmentId,
-        healthScore: equipmentMeasurements.healthScore,
-      })
-      .from(equipmentMeasurements)
-      .orderBy(desc(equipmentMeasurements.measurementDate)),
   ]);
 
   const costThisMonth = monthCostResult[0]?.value ?? 0;
   const costThisYear = yearCostResult[0]?.value ?? 0;
+
+  // Fetch latest health scores ONLY for the displayed problematic equipment
+  const problematicIds = problematicEquipment.map((item) => item.id);
+  const latestMeasurements = problematicIds.length > 0 
+    ? await db
+        .select({
+          equipmentId: equipmentMeasurements.equipmentId,
+          healthScore: equipmentMeasurements.healthScore,
+        })
+        .from(equipmentMeasurements)
+        .where(inArray(equipmentMeasurements.equipmentId, problematicIds))
+        .orderBy(desc(equipmentMeasurements.measurementDate))
+    : [];
 
   // Map health scores
   const latestHealthMap = new Map<string, number>();
