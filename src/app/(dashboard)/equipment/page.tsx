@@ -56,8 +56,9 @@ export default async function EquipmentPage({
   ]);
   const resolvedSearchParams = (await searchParams) ?? {};
   const searchQuery = normalizeSearchParam(resolvedSearchParams.q).trim().toLowerCase();
+  const activeItems = items.filter((item) => item.status !== "retired");
   const filteredItems = searchQuery
-    ? items.filter((item) => {
+    ? activeItems.filter((item) => {
         const haystack = [
           item.code,
           item.name,
@@ -76,7 +77,7 @@ export default async function EquipmentPage({
 
         return haystack.includes(searchQuery);
       })
-    : items;
+    : activeItems;
 
   const summaryCards = [
     {
