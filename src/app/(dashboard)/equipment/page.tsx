@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
-import { ArrowRight, ClipboardCheck, Eye, LayoutGrid, MapPin, Search, ShieldAlert, ShieldCheck, Wrench, PencilLine, XCircle } from "lucide-react";
+import { ArrowRight, ClipboardCheck, Eye, LayoutGrid, MapPin, Search, ShieldAlert, ShieldCheck, Wrench, PencilLine } from "lucide-react";
 
 import { ActionModal } from "@/components/action-modal";
 import { getCurrentAuthSession } from "@/lib/auth";
@@ -39,32 +39,32 @@ function renderStatusIcon(status: string) {
   switch (status) {
     case "ready":
       return (
-        <span className="inline-flex h-9 w-9 items-center justify-center rounded-xl bg-emerald-50 text-emerald-700 dark:bg-emerald-950/30 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-900/50 shadow-soft" title={label}>
-          <ShieldCheck className="h-5 w-5" />
+        <span className="inline-flex h-9 w-9 items-center justify-center rounded-xl bg-emerald-50 dark:bg-emerald-950/30 border border-emerald-200 dark:border-emerald-900/50 shadow-soft text-base" title={label}>
+          ✅
         </span>
       );
     case "in_use":
       return (
-        <span className="inline-flex h-9 w-9 items-center justify-center rounded-xl bg-sky-50 text-sky-700 dark:bg-sky-950/30 dark:text-sky-400 border border-sky-200 dark:border-sky-900/50 shadow-soft" title={label}>
-          <Eye className="h-5 w-5" />
+        <span className="inline-flex h-9 w-9 items-center justify-center rounded-xl bg-sky-50 dark:bg-sky-950/30 border border-sky-200 dark:border-sky-900/50 shadow-soft text-base" title={label}>
+          🏃
         </span>
       );
     case "inspection_due":
       return (
-        <span className="inline-flex h-9 w-9 items-center justify-center rounded-xl bg-amber-50 text-amber-700 dark:bg-amber-950/30 dark:text-amber-400 border border-amber-200 dark:border-amber-900/50 shadow-soft" title={label}>
-          <ShieldAlert className="h-5 w-5" />
+        <span className="inline-flex h-9 w-9 items-center justify-center rounded-xl bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-900/50 shadow-soft text-base" title={label}>
+          ⚠️
         </span>
       );
     case "maintenance":
       return (
-        <span className="inline-flex h-9 w-9 items-center justify-center rounded-xl bg-rose-50 text-rose-700 dark:bg-rose-950/30 dark:text-rose-400 border border-rose-200 dark:border-rose-900/50 shadow-soft" title={label}>
-          <Wrench className="h-5 w-5" />
+        <span className="inline-flex h-9 w-9 items-center justify-center rounded-xl bg-rose-50 dark:bg-rose-950/30 border border-rose-200 dark:border-rose-900/50 shadow-soft text-base" title={label}>
+          🔧
         </span>
       );
     case "retired":
       return (
-        <span className="inline-flex h-9 w-9 items-center justify-center rounded-xl bg-slate-100 text-slate-700 dark:bg-slate-900 dark:text-slate-400 border border-slate-200 dark:border-slate-800 shadow-soft" title={label}>
-          <XCircle className="h-5 w-5" />
+        <span className="inline-flex h-9 w-9 items-center justify-center rounded-xl bg-slate-100 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-soft text-base" title={label}>
+          ❌
         </span>
       );
     default:
