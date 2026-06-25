@@ -102,6 +102,7 @@ export function DashboardChrome({ children, user, roles, isAdmin, logoutAction }
                 <Link
                   key={item.href}
                   href={item.href}
+                  prefetch={false}
                   className={`flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition ${
                     active ? "bg-accent/10 text-accent" : "text-muted hover:bg-panelAlt hover:text-text"
                   }`}
@@ -124,6 +125,7 @@ export function DashboardChrome({ children, user, roles, isAdmin, logoutAction }
                       <Link
                         key={item.href}
                         href={item.href}
+                        prefetch={false}
                         className={`flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition ${
                           active ? "bg-accent/10 text-accent" : "text-muted hover:bg-panelAlt hover:text-text"
                         }`}
@@ -189,6 +191,7 @@ export function DashboardChrome({ children, user, roles, isAdmin, logoutAction }
                   <Link
                     key={item.href}
                     href={item.href}
+                    prefetch={false}
                     onClick={() => setMobileOpen(false)}
                     className={`flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition ${
                       active ? "bg-accent/10 text-accent" : "text-muted hover:bg-panelAlt hover:text-text"
@@ -212,6 +215,7 @@ export function DashboardChrome({ children, user, roles, isAdmin, logoutAction }
                         <Link
                           key={item.href}
                           href={item.href}
+                          prefetch={false}
                           onClick={() => setMobileOpen(false)}
                           className={`flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition ${
                             active ? "bg-accent/10 text-accent" : "text-muted hover:bg-panelAlt hover:text-text"
