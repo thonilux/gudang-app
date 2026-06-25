@@ -4,7 +4,6 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { type ReactNode, useMemo, useState } from "react";
 import {
-  Building2,
   ClipboardCheck,
   CalendarDays,
   type LucideIcon,
@@ -81,15 +80,9 @@ export function DashboardChrome({ children, user, roles, isAdmin, logoutAction }
     <div className="min-h-screen bg-surface text-text">
       <aside className="hidden xl:fixed xl:inset-y-0 xl:flex xl:w-72 xl:flex-col">
         <div className="flex h-full flex-col border-r border-border bg-panel">
-          <div className="border-b border-border px-6 py-6">
+          <div className="border-b border-border px-6 py-5">
             <div className="flex items-center gap-3">
-              <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-blue-600 text-white shadow-sm">
-                <Building2 className="h-5 w-5" />
-              </div>
-              <div>
-                <p className="text-xs font-semibold uppercase tracking-[0.22em] text-blue-600">Gudang</p>
-                <p className="mt-1 text-sm font-medium text-text">Operasional rental</p>
-              </div>
+              <img src="/emji+tulisan.png" alt="EMJI Logo" className="h-10 w-auto object-contain dark:brightness-110" />
             </div>
           </div>
 
@@ -140,7 +133,7 @@ export function DashboardChrome({ children, user, roles, isAdmin, logoutAction }
             ) : null}
           </nav>
 
-          <div className="border-t border-border px-6 py-5">
+          <div className="border-t border-border px-6 py-4">
             <div className="rounded-xl border border-border bg-panelAlt p-4">
               <p className="text-sm font-medium text-text">{user.name}</p>
               <p className="mt-1 text-xs text-muted">{user.email}</p>
@@ -151,6 +144,10 @@ export function DashboardChrome({ children, user, roles, isAdmin, logoutAction }
                   </span>
                 ))}
               </div>
+            </div>
+            <div className="mt-4 text-center text-[10px] text-muted">
+              <p>© {new Date().getFullYear()} by emjijaya. All rights reserved.</p>
+              <p className="mt-0.5">Developer: <span className="font-semibold text-text">Thonilux</span></p>
             </div>
           </div>
         </div>
@@ -164,13 +161,7 @@ export function DashboardChrome({ children, user, roles, isAdmin, logoutAction }
           >
             <div className="flex items-center justify-between border-b border-border px-5 py-4">
               <div className="flex items-center gap-3">
-                <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-blue-600 text-white">
-                  <Building2 className="h-5 w-5" />
-                </div>
-                <div>
-                  <p className="text-xs font-semibold uppercase tracking-[0.22em] text-blue-600">Gudang</p>
-                  <p className="mt-1 text-sm font-medium text-text">Operasional</p>
-                </div>
+                <img src="/emji+tulisan.png" alt="EMJI Logo" className="h-8 w-auto object-contain dark:brightness-110" />
               </div>
               <button
                 type="button"
@@ -245,6 +236,10 @@ export function DashboardChrome({ children, user, roles, isAdmin, logoutAction }
                   </button>
                 </form>
               </div>
+              <div className="mt-4 text-center text-[10px] text-muted">
+                <p>© {new Date().getFullYear()} by emjijaya. All rights reserved.</p>
+                <p className="mt-0.5">Developer: <span className="font-semibold text-text">Thonilux</span></p>
+              </div>
             </div>
           </aside>
         </div>
@@ -294,7 +289,15 @@ export function DashboardChrome({ children, user, roles, isAdmin, logoutAction }
           </div>
         </header>
 
-        <main className="mx-auto w-full max-w-7xl px-4 py-6 sm:px-6 lg:px-8">{children}</main>
+        <main className="mx-auto w-full max-w-7xl px-4 py-6 sm:px-6 lg:px-8">
+          {children}
+          <footer className="mt-12 border-t border-border pt-6 pb-8 text-center text-xs text-muted">
+            <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
+              <p>© {new Date().getFullYear()} by emjijaya. All rights reserved.</p>
+              <p>Developed with ❤️ by <span className="font-semibold text-text">Thonilux</span></p>
+            </div>
+          </footer>
+        </main>
       </div>
     </div>
   );

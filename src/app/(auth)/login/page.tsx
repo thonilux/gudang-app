@@ -1,4 +1,3 @@
-import { ShieldCheck } from "lucide-react";
 import { redirect } from "next/navigation";
 
 import { getCurrentAuthSession } from "@/lib/auth";
@@ -20,22 +19,22 @@ export default async function LoginPage() {
         <ThemeToggle />
       </div>
       <section className="w-full max-w-md rounded-2xl border border-slate-200 bg-white p-8 shadow-soft dark:border-slate-800">
-        <div className="flex items-center gap-3">
-          <div className="rounded-2xl bg-blue-50 p-3 text-blue-700">
-            <ShieldCheck className="h-5 w-5" />
-          </div>
-          <div>
-            <p className="text-sm font-medium uppercase tracking-[0.2em] text-blue-600">Gudang</p>
-            <h1 className="mt-1 text-2xl font-semibold tracking-tight">Masuk ke sistem</h1>
-          </div>
+        <div className="flex flex-col items-center mb-6 text-center">
+          <img src="/emji+tulisan.png" alt="EMJI Logo" className="h-16 w-auto object-contain mb-4" />
+          <h1 className="text-2xl font-bold tracking-tight text-slate-900 dark:text-white">Masuk ke sistem</h1>
         </div>
 
-        <p className="mt-4 text-sm leading-6 text-slate-600 dark:text-slate-400">
+        <p className="mt-4 text-center text-sm leading-6 text-slate-600 dark:text-slate-400">
           Gunakan akun operasional untuk masuk ke dashboard dan memantau kesiapan peralatan.
         </p>
 
         <div className="mt-6">
           <LoginForm />
+        </div>
+
+        <div className="mt-8 pt-6 border-t border-slate-100 dark:border-slate-800 text-center text-[11px] text-slate-400 dark:text-slate-500">
+          <p>© {new Date().getFullYear()} by emjijaya. All rights reserved.</p>
+          <p className="mt-1">Developed by <span className="font-semibold text-slate-600 dark:text-slate-300">Thonilux</span></p>
         </div>
       </section>
     </main>
