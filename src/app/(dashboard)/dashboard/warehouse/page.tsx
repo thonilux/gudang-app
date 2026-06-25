@@ -151,7 +151,7 @@ export default async function WarehousePage({ searchParams }: PageProps) {
         <div className="flex gap-6">
           <Link prefetch={false}
             href="/dashboard/warehouse?tab=serial"
-            className={`pb-4 text-sm font-semibold border-b-2 transition ${
+            className={`pb-4 text-xs sm:text-sm font-semibold border-b-2 transition ${
               activeTab === "serial"
                 ? "border-blue-600 text-blue-600"
                 : "border-transparent text-slate-500 hover:text-slate-900"
@@ -161,7 +161,7 @@ export default async function WarehousePage({ searchParams }: PageProps) {
           </Link>
           <Link prefetch={false}
             href="/dashboard/warehouse?tab=nonserial"
-            className={`pb-4 text-sm font-semibold border-b-2 transition ${
+            className={`pb-4 text-xs sm:text-sm font-semibold border-b-2 transition ${
               activeTab === "nonserial"
                 ? "border-blue-600 text-blue-600"
                 : "border-transparent text-slate-500 hover:text-slate-900"
