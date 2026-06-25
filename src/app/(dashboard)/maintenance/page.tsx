@@ -343,7 +343,7 @@ export default async function MaintenancePage({
           </form>
 
           <div className="mt-5 overflow-x-auto rounded-2xl border border-slate-200">
-            <table className="min-w-full divide-y divide-slate-200 text-left text-sm">
+            <table className="min-w-[800px] md:min-w-full divide-y divide-slate-200 text-left text-sm">
               <thead className="bg-slate-50 text-slate-600">
                 <tr>
                   <th className="px-4 py-3 font-medium">Ticket</th>

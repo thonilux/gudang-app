@@ -419,7 +419,7 @@ export default async function DashboardPage() {
           </div>
 
           <div className="overflow-x-auto rounded-xl border border-border">
-            <table className="min-w-full divide-y divide-border text-left text-xs">
+            <table className="min-w-[500px] md:min-w-full divide-y divide-border text-left text-xs">
               <thead className="bg-panelAlt text-muted">
                 <tr>
                   <th className="px-4 py-2.5 font-semibold">Kode / Nama</th>
